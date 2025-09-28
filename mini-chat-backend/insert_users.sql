@@ -1,0 +1,6 @@
+INSERT INTO user VALUES 
+('user-001', 'alice', 'Alice', NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'female', '1995-03-15 00:00:00.000', 'Hello, I am Alice!', '13800138001', 'alice@example.com', NULL, NULL, 'active', 0, NOW(), NOW(), NULL),
+('user-002', 'bob', 'Bob', NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'male', '1992-07-22 00:00:00.000', 'Nice to meet you!', '13800138002', 'bob@example.com', NULL, NULL, 'active', 0, NOW(), NOW(), NULL),
+('user-003', 'charlie', 'Charlie', NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'male', '1998-11-08 00:00:00.000', 'Lets chat!', '13800138003', 'charlie@example.com', NULL, NULL, 'active', 0, NOW(), NOW(), NULL),
+('user-004', 'diana', 'Diana', NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'female', '1996-05-12 00:00:00.000', 'Welcome to our chat!', '13800138004', 'diana@example.com', NULL, NULL, 'active', 0, NOW(), NOW(), NULL),
+('user-005', 'eve', 'Eve', NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'female', '1994-09-30 00:00:00.000', 'Hello everyone!', '13800138005', 'eve@example.com', NULL, NULL, 'active', 0, NOW(), NOW(), NULL);

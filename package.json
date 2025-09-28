@@ -1,0 +1,21 @@
+{
+  "name": "mini-chat-fullstack",
+  "version": "1.0.0",
+  "description": "Mini Chat Full Stack Application",
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev:frontend": "cd moni.chat && npm run dev",
+    "dev:backend": "cd mini-chat-backend && npm run dev",
+    "start": "npm-run-all --parallel start:frontend start:backend",
+    "start:frontend": "cd moni.chat && npm run preview",
+    "start:backend": "cd mini-chat-backend && npm start",
+    "install:all": "npm install && cd moni.chat && npm install && cd ../mini-chat-backend && npm install"
+  },
+  "devDependencies": {
+    "npm-run-all2": "^7.0.2"
+  },
+  "keywords": ["chat", "vue", "node", "websocket"],
+  "author": "",
+  "license": "ISC",
+  "host": "0.0.0.0"
+}
