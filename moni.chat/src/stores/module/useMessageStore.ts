@@ -26,7 +26,7 @@ export const useMessageStore = defineStore('message', () => {
             fromInfo: {
                 id: currentUserId,
                 name: userStore.user?.name || '',
-                avatar: userStore.user?.portrait || null,
+                avatar: userStore.user?.avatar || null,
                 type: 'user',
                 badge: null
             },

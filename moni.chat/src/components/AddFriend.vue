@@ -23,7 +23,7 @@
           class="user-item"
         >
           <div class="user-info">
-            <img :src="user.portrait || '/default-avatar.png'" :alt="user.name" class="avatar" />
+            <img :src="user.avatar || '/default-avatar.png'" :alt="user.name" class="avatar" />
             <div class="user-details">
               <div class="name">{{ user.name }}</div>
               <div class="account">账号: {{ user.account }}</div>

@@ -28,7 +28,7 @@
           @click="handleFriendClick(friend)"
         >
           <div class="friend-avatar">
-            <img v-if="friend.portrait" :src="friend.portrait" :alt="friend.name" />
+            <img v-if="friend.avatar" :src="friend.avatar" :alt="friend.name" />
             <Avatar v-else :name="friend.name" :size="50" />
             <div class="online-status" :class="{ online: friend.is_online }"></div>
           </div>

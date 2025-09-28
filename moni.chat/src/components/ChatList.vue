@@ -6,7 +6,7 @@
             <div v-for="chat in chatListStore.groupChats" :key="chat.id" class="chat-item"
                 :class="{ active: messageStore.targetId === chat.targetId }" @click="handleChatClick(chat)">
                 <div class="chat-avatar">
-                    <img v-if="userStore.userMap[chat.targetId]?.avatar" :src="userStore.userMap[chat.targetId]?.avatar || ''" class="avatar" alt="">
+                    <img v-if="getUserAvatar(chat.targetId)" :src="getUserAvatar(chat.targetId)" class="avatar" alt="">
                     <Avatar v-else :name="chat.targetInfo.name" :size="40" />
                     <div v-if="chat.unreadCount > 0" class="unread-badge">
                         {{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}
@@ -33,7 +33,7 @@
             <div v-for="chat in chatListStore.privateChats" :key="chat.id" class="chat-item"
                 :class="{ active: messageStore.targetId === chat.targetId }" @click="handleChatClick(chat)">
                 <div class="chat-avatar">
-                    <img v-if="userStore.userMap[chat.targetId]?.avatar" :src="userStore.userMap[chat.targetId]?.avatar || ''" alt="">
+                    <img v-if="getUserAvatar(chat.targetId)" :src="getUserAvatar(chat.targetId)" alt="">
                     <Avatar v-else :name="chat.targetInfo.name" :size="40" />
                     <div v-if="chat.unreadCount > 0" class="unread-badge">
                         {{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}
@@ -192,6 +192,23 @@ const getLatestMessage = (targetId: string): string => {
 }
 const handleLogout = ()=>{
     userStore.logout()
+}
+
+// 获取用户头像，处理头像URL无法访问的情况
+const getUserAvatar = (targetId: string): string | null => {
+    const userInfo = userStore.userMap[targetId]
+    if (!userInfo?.avatar) return null
+    
+    // 检查头像URL是否有效
+    const avatarUrl = userInfo.avatar
+    console.log('检查头像URL:', avatarUrl)
+    
+    // 如果是dicebear.com的URL，直接返回（让浏览器处理加载失败）
+    if (avatarUrl.includes('dicebear.com')) {
+        return avatarUrl
+    }
+    
+    return avatarUrl
 }
 onMounted(() => {
     chatListStore.fetchAllChats()

@@ -35,19 +35,34 @@ export const useUserStore = defineStore('user', {
             this.user = null
             this.token = ''
         },
-        async getUserMap() {
+        async getUserMap(forceRefresh = false) {
+            console.log('🔄 getUserMap 开始执行, forceRefresh:', forceRefresh)
+            
             try {
+                // 如果强制刷新，先清空现有数据
+                if (forceRefresh) {
+                    this.userMap = {}
+                    console.log('🧹 强制刷新用户映射，清空现有数据')
+                }
+                
+                console.log('📡 开始调用 getUserMap API...')
                 const res = await listMap() as UserMapResponse
-                console.log('getUserMap API response:', res)
-                if (res.code === 200) {
+                console.log('📥 getUserMap API response:', res)
+                
+                if (res && res.code === 200) {
                     this.userMap = res.data;
-                    console.log('userMap updated:', this.userMap)
+                    console.log('✅ userMap updated, 用户数量:', Object.keys(this.userMap).length)
+                    
+                    // 检查头像数据
+                    const avatarCount = Object.values(this.userMap).filter(user => 
+                        user.avatar && user.avatar.includes('dicebear.com')
+                    ).length
+                    console.log(`🎭 包含卡通头像的用户: ${avatarCount}/${Object.keys(this.userMap).length}`)
                 } else {
-                    console.error('getUserMap failed:', res.msg)
+                    console.error('❌ getUserMap failed:', res?.msg || 'Unknown error')
                 }
             } catch (error) {
-                console.error('getUserMap API call failed:', error)
-                // 设置一个空的用户映射，避免页面崩溃
+                console.error('💥 getUserMap API call failed:', error)
                 this.userMap = {}
             }
         }

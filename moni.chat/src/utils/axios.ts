@@ -126,6 +126,8 @@ export default class Http {
     });
 
     const fullUrl = urlParams.length ? `${SERVICE_URL + url}?${urlParams.join('&')}` : SERVICE_URL + url;
+    console.log('📡 Http.get:', fullUrl)
+    
     const config: InternalAxiosRequestConfig = {
       url: fullUrl,
       params: {
