@@ -2,7 +2,18 @@ import axios, { type InternalAxiosRequestConfig, type AxiosResponse, AxiosHeader
 import { useGlobalStore } from '@/stores/module/useGlobalStore.js';
 import router from '@/router';
 import { ElMessage } from 'element-plus';
-const SERVICE_URL = import.meta.env.VITE_HTTP_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:3002');
+// 检测移动端环境的函数
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// 获取服务URL的函数
+function getServiceUrl() {
+  const isMobile = isMobileDevice();
+  return import.meta.env.VITE_HTTP_URL || (isMobile ? 'http://10.33.9.159:3002' : (import.meta.env.DEV ? '/api' : 'http://10.33.9.159:3002'));
+}
+
+const SERVICE_URL = getServiceUrl();
 export { SERVICE_URL };
 
 // 请求拦截器
@@ -45,24 +56,88 @@ axios.interceptors.response.use(
 
 export default class Http {
 
-  static send<T>(config: InternalAxiosRequestConfig, _loading?: boolean, isBlob?: boolean): Promise<T> {
-    const configs: InternalAxiosRequestConfig = Object.assign(
-      {
-        timeout: 30000,
-        headers: new AxiosHeaders(),
-      },
-      config
-    );
-    return axios(configs)
-      .then((res) => {
-        if (isBlob) {
-          return res as unknown as T; // 处理 Blob 类型
+  // 重试配置
+  private static readonly MAX_RETRIES = 3;
+  private static readonly RETRY_DELAY = 1000; // 1秒
+
+  // 带重试机制的请求方法
+  private static async sendWithRetry<T>(config: InternalAxiosRequestConfig, _loading?: boolean, isBlob?: boolean): Promise<T> {
+    let lastError: any;
+    
+    // 检测移动端环境（只检测一次）
+    const isMobile = isMobileDevice();
+    console.log('📱 移动端检测结果:', isMobile);
+    
+    for (let attempt = 1; attempt <= Http.MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🔄 网络请求尝试 ${attempt}/${Http.MAX_RETRIES}:`, config.url);
+        
+        const configs: InternalAxiosRequestConfig = Object.assign(
+          {
+            timeout: isMobile ? 15000 : 10000, // 移动端使用适中的超时时间
+            headers: new AxiosHeaders(),
+            // 添加更多网络优化配置
+            validateStatus: (status: number) => status < 500, // 只对5xx错误重试
+            maxRedirects: 5,
+            // 添加移动端优化
+            withCredentials: false,
+            // 移动端特殊配置
+            ...(isMobile && {
+              // 移动端网络优化
+              maxContentLength: 50 * 1024 * 1024, // 50MB
+              maxBodyLength: 50 * 1024 * 1024, // 50MB
+              // 禁用某些可能导致移动端问题的功能
+              decompress: true
+            })
+          },
+          config
+        );
+
+        // 移动端特殊处理
+        if (isMobile) {
+          console.log('📱 应用移动端优化配置');
+          // 添加移动端特定的请求头
+          configs.headers?.set('X-Requested-With', 'XMLHttpRequest');
+          configs.headers?.set('X-Mobile-Client', 'true');
+          configs.headers?.set('User-Agent', navigator.userAgent);
+          // 移动端网络优化
+          configs.headers?.set('Connection', 'keep-alive');
+          configs.headers?.set('Cache-Control', 'no-cache');
         }
-        return res.data as T;
-      })
-      .catch((error) => {
-        throw error;
-      });
+
+        const response = await axios(configs);
+        
+        if (isBlob) {
+          return response as unknown as T;
+        }
+        return response.data as T;
+        
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`⚠️ 网络请求失败 (尝试 ${attempt}/${Http.MAX_RETRIES}):`, error.message);
+        
+        // 移动端特殊错误处理
+        if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+          console.log('📱 检测到移动端网络错误，尝试特殊处理');
+          // 移动端网络错误等待时间稍长
+          await new Promise(resolve => setTimeout(resolve, Http.RETRY_DELAY * attempt * 1.5));
+        } else {
+          // 等待后重试
+          await new Promise(resolve => setTimeout(resolve, Http.RETRY_DELAY * attempt));
+        }
+        
+        // 如果是最后一次尝试，直接抛出错误
+        if (attempt === Http.MAX_RETRIES) {
+          break;
+        }
+      }
+    }
+    
+    throw lastError;
+  }
+
+  static send<T>(config: InternalAxiosRequestConfig, _loading?: boolean, isBlob?: boolean): Promise<T> {
+    return Http.sendWithRetry<T>(config, _loading, isBlob);
   }
 
   static post<T>(url: string, params: Record<string, any> = {}, loading?: boolean): Promise<T> {

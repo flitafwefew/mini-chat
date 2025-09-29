@@ -53,16 +53,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { login, register, getCode } from '@/api/login'
+import { login, getCode } from '@/api/login'
 import { ElMessage } from 'element-plus'
-import type { LoginResponse, RegisterResponse, CodeResponse } from '@/types/login'
+import type { LoginResponse, CodeResponse } from '@/types/login'
 import { useUserStore } from '@/stores/module/useUserStore'
 const router = useRouter()
 const isLogin = ref(true)
 const isAnimating = ref(false)
 const countdown = ref(0)
+
+// 存储定时器引用，用于清理
+const timers: Array<number> = []
 
 // 表单数据
 const loginForm = ref({
@@ -81,9 +84,10 @@ const registerForm = ref({
 // 切换登录/注册
 const handleSwitch = () => {
     isAnimating.value = true
-    setTimeout(() => {
+    const timer = setTimeout(() => {
         isAnimating.value = false
     }, 1500)
+    timers.push(timer)
     isLogin.value = !isLogin.value
 }
 
@@ -95,33 +99,96 @@ const handleLogin = async () => {
     }
 
     try {
-        const res = await login({
-            account: loginForm.value.userName,
-            password: loginForm.value.password
-        }) as LoginResponse
+        console.log('🔐 开始登录，用户名:', loginForm.value.userName);
+        
+        // 检测移动端环境
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        console.log('📱 移动端检测结果:', isMobile);
+        
+        let res: LoginResponse;
+        
+        if (isMobile) {
+            // 移动端直接使用fetch API，和调试页面完全相同的逻辑
+            console.log('📱 使用移动端直接连接方式');
+            console.log('📡 请求URL: http://10.33.9.159:3002/api/v1/user/login');
+            console.log('📡 请求数据:', { account: loginForm.value.userName, password: loginForm.value.password });
+            
+            const response = await fetch('http://10.33.9.159:3002/api/v1/user/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    account: loginForm.value.userName,
+                    password: loginForm.value.password
+                })
+            });
+            
+            console.log('📡 响应状态:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ 响应错误:', errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+            }
+            
+            res = await response.json();
+            console.log('📡 响应数据:', res);
+        } else {
+            // 桌面端使用原有的Http类
+            console.log('🖥️ 使用桌面端Http类');
+            res = await login({
+                account: loginForm.value.userName,
+                password: loginForm.value.password
+            }) as LoginResponse;
+        }
+        
+        console.log('📥 登录响应:', res);
         if (res.code === 200) {
-            // 存储token
+            // 存储token和用户信息（和调试页面完全相同）
             localStorage.setItem('x-token', res.data.token)
+            localStorage.setItem('user', JSON.stringify(res.data.user))
+            console.log('✅ Token和用户信息已存储');
+            
+            // 更新store状态
             const userStore = useUserStore()
             userStore.setToken(res.data.token)
             userStore.setUser(res.data.user)
-            localStorage.setItem('user', JSON.stringify(res.data.user))
-            
-            // 获取用户映射，确保头像数据可用
-            await userStore.getUserMap()
+            console.log('✅ Store状态已更新');
             
             ElMessage.success('登录成功')
-            router.push('/')
+            console.log('🚀 准备跳转到聊天页面')
+            
+            // 检查localStorage中的数据
+            const storedToken = localStorage.getItem('x-token');
+            const storedUser = localStorage.getItem('user');
+            console.log('🔍 存储验证 - Token:', !!storedToken, 'User:', !!storedUser);
+            
+            // 直接跳转，不使用Vue Router
+            console.log('🔄 直接跳转到主应用...');
+            window.location.href = '/';
+            
         } else {
+            console.error('❌ 登录失败，响应码:', res.code, '错误信息:', res.msg);
             ElMessage.error(res.msg || '登录失败')
         }
-    } catch (error) {
-        // 检查 error 是否存在
-        if (error && typeof error === 'object' && 'message' in error) {
-            ElMessage.error(error.message || '登录失败，请稍后重试')
-        } else {
-            ElMessage.error('登录失败，请稍后重试')
+    } catch (error: any) {
+        console.error('❌ 登录失败:', error);
+        
+        // 简化错误处理
+        let errorMessage = '登录失败，请稍后重试';
+        
+        if (error && typeof error === 'object') {
+            if (error.code && error.msg) {
+                errorMessage = error.msg;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+        } else if (typeof error === 'string') {
+            errorMessage = error;
         }
+        
+        ElMessage.error(errorMessage);
     }
 }
 
@@ -150,8 +217,14 @@ const sendVerifyCode = async () => {
                 countdown.value--
                 if (countdown.value <= 0) {
                     clearInterval(timer)
+                    // 从数组中移除已完成的定时器
+                    const index = timers.indexOf(timer)
+                    if (index > -1) {
+                        timers.splice(index, 1)
+                    }
                 }
             }, 1000)
+            timers.push(timer)
         } else {
             ElMessage.error(res.msg || '发送验证码失败')
         }
@@ -159,6 +232,15 @@ const sendVerifyCode = async () => {
         ElMessage.error(error.message || '发送验证码失败，请重试')
     }
 }
+
+// 清理定时器
+onUnmounted(() => {
+    timers.forEach(timer => {
+        clearTimeout(timer)
+        clearInterval(timer)
+    })
+    timers.length = 0
+})
 </script>
 
 <style scoped lang="scss">

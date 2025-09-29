@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { login, register } from '@/api/login'
 import { ElMessage } from 'element-plus'
@@ -136,45 +136,153 @@ const registerForm = ref({
     phone: ''
 })
 
+// 存储事件监听器引用，用于清理
+const eventListeners: Array<{ element: Element; event: string; handler: EventListener }> = []
+
+// 存储定时器引用，用于清理
+const timers: Array<number> = []
+
 // 切换登录/注册
 const handleSwitch = () => {
     isAnimating.value = true
-    setTimeout(() => {
+    const timer = setTimeout(() => {
         isAnimating.value = false
     }, 1500)
+    timers.push(timer)
     isLogin.value = !isLogin.value
 }
 
 // 处理登录
 const handleLogin = async () => {
+    console.log('🚀 handleLogin函数被调用')
+    console.log('📱 当前设备类型:', window.innerWidth <= 700 ? '移动端' : '桌面端')
+    console.log('📝 登录表单数据:', loginForm.value)
+    
     if (!loginForm.value.userName || !loginForm.value.password) {
+        console.log('❌ 用户名或密码为空')
         ElMessage.error('请输入用户名和密码')
         return
     }
 
+    console.log('🔐 开始登录:', { account: loginForm.value.userName })
+
     try {
-        const res = await login({
-            account: loginForm.value.userName,
-            password: loginForm.value.password
-        }) as LoginResponse
+        // 检测移动端环境
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        console.log('📱 移动端检测结果:', isMobile);
+        
+        let res: LoginResponse;
+        
+        if (isMobile) {
+            // 移动端直接使用fetch API，和调试页面完全相同的逻辑
+            console.log('📱 使用移动端直接连接方式');
+            console.log('📡 请求URL: http://10.33.9.159:3002/api/v1/user/login');
+            console.log('📡 请求数据:', { account: loginForm.value.userName, password: loginForm.value.password });
+            
+            const response = await fetch('http://10.33.9.159:3002/api/v1/user/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    account: loginForm.value.userName,
+                    password: loginForm.value.password
+                })
+            });
+            
+            console.log('📡 响应状态:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ 响应错误:', errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+            }
+            
+            res = await response.json();
+            console.log('📡 响应数据:', res);
+        } else {
+            // 桌面端使用原有的Http类
+            console.log('🖥️ 使用桌面端Http类');
+            res = await login({
+                account: loginForm.value.userName,
+                password: loginForm.value.password
+            }) as LoginResponse;
+        }
+        
+        console.log('📝 登录响应:', res)
+        console.log('📝 响应类型:', typeof res)
+        console.log('📝 响应结构:', JSON.stringify(res, null, 2))
+        
+        // 检查响应是否有效
+        if (!res) {
+            console.error('❌ 登录响应为空')
+            ElMessage.error('登录失败，服务器无响应')
+            return
+        }
+        
+        // 检查响应格式
+        if (typeof res.code === 'undefined') {
+            console.error('❌ 登录响应格式错误，缺少code字段:', res)
+            ElMessage.error('登录失败，响应格式错误')
+            return
+        }
+        
         if (res.code === 200) {
-            // 存储token
+            // 检查必要的数据字段
+            if (!res.data || !res.data.token || !res.data.user) {
+                console.error('❌ 登录成功但数据不完整:', res.data)
+                ElMessage.error('登录失败，用户数据不完整')
+                return
+            }
+            
+            // 存储token和用户信息
             localStorage.setItem('x-token', res.data.token)
+            localStorage.setItem('user', JSON.stringify(res.data.user))
+            
             const userStore = useUserStore()
             userStore.setToken(res.data.token)
             userStore.setUser(res.data.user)
-            localStorage.setItem('user', JSON.stringify(res.data.user))
             
-            // 获取用户映射，确保头像数据可用
-            await userStore.getUserMap()
+            console.log('✅ 用户信息已存储:', res.data.user)
+            console.log('✅ Token已存储:', res.data.token.substring(0, 20) + '...')
+            
+            // 获取用户映射，确保头像数据可用（失败不影响登录）
+            try {
+                await userStore.getUserMap()
+                console.log('✅ 用户映射获取成功')
+            } catch (error) {
+                console.warn('获取用户映射失败，但不影响登录:', error)
+            }
             
             ElMessage.success('登录成功')
-            router.push('/')
+            console.log('🚀 准备跳转到聊天页面')
+            
+            // 直接跳转，不使用Vue Router
+            console.log('🔄 直接跳转到主应用...');
+            window.location.href = '/';
         } else {
+            console.error('❌ 登录失败:', res.msg, '状态码:', res.code)
             ElMessage.error(res.msg || '登录失败')
         }
     } catch (error: any) {
-        ElMessage.error(error.message || '登录失败，请稍后重试')
+        console.error('❌ 登录异常:', error)
+        console.error('❌ 错误类型:', typeof error)
+        console.error('❌ 错误详情:', JSON.stringify(error, null, 2))
+        
+        // 处理不同类型的错误
+        if (error && typeof error === 'object' && error.code && error.msg) {
+            // 这是后端返回的标准错误格式
+            console.error('❌ 后端错误:', error.msg)
+            ElMessage.error(error.msg || '登录失败')
+        } else if (error && typeof error === 'string') {
+            // 这是网络错误或其他字符串错误
+            console.error('❌ 网络错误:', error)
+            ElMessage.error(error || '登录失败，请检查网络连接')
+        } else {
+            // 其他未知错误
+            console.error('❌ 未知错误:', error)
+            ElMessage.error('登录失败，请稍后重试')
+        }
     }
 }
 
@@ -258,8 +366,14 @@ const sendVerifyCode = async () => {
                 countdown.value--
                 if (countdown.value <= 0) {
                     clearInterval(timer)
+                    // 从数组中移除已完成的定时器
+                    const index = timers.indexOf(timer)
+                    if (index > -1) {
+                        timers.splice(index, 1)
+                    }
                 }
             }, 1000)
+            timers.push(timer)
         } else {
             ElMessage.error(res.msg || '发送验证码失败')
         }
@@ -270,23 +384,60 @@ const sendVerifyCode = async () => {
 }
 
 onMounted(() => {
-    // 添加按钮点击事件
+    // 添加按钮点击事件 - 桌面端
     const allButtons = document.querySelectorAll('.submit')
     allButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
+        const handler = (e: Event) => {
             e.preventDefault()
             if (isLogin.value) {
                 handleLogin()
             } else {
                 handleRegister()
             }
-        })
+        }
+        button.addEventListener('click', handler)
+        eventListeners.push({ element: button, event: 'click', handler })
     })
+
+    // 手机端按钮已经在模板中绑定了@click事件，不需要重复绑定
+    // 注释掉重复的事件绑定，避免冲突
+    /*
+    const mobileButtons = document.querySelectorAll('.btn')
+    mobileButtons.forEach(button => {
+        const handler = (e: Event) => {
+            e.preventDefault()
+            if (isLogin.value) {
+                handleLogin()
+            } else {
+                handleRegister()
+            }
+        }
+        button.addEventListener('click', handler)
+        eventListeners.push({ element: button, event: 'click', handler })
+    })
+    */
 
     const switchBtn = document.querySelectorAll('.switch-btn')
     switchBtn.forEach(button => {
         button.addEventListener('click', handleSwitch)
+        eventListeners.push({ element: button, event: 'click', handler: handleSwitch })
     })
+})
+
+// 清理事件监听器和定时器
+onUnmounted(() => {
+    // 清理事件监听器
+    eventListeners.forEach(({ element, event, handler }) => {
+        element.removeEventListener(event, handler)
+    })
+    eventListeners.length = 0
+    
+    // 清理所有定时器
+    timers.forEach(timer => {
+        clearTimeout(timer)
+        clearInterval(timer)
+    })
+    timers.length = 0
 })
 </script>
 
@@ -651,34 +802,25 @@ body {
     cursor: not-allowed;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
 .MobileLoginPage {
     display: flex;
 
     @media screen and (min-width: 700px) {
         display: none;
     }
+    
+    /* 确保在移动端正确显示 */
+    @media screen and (max-width: 700px) {
+        display: flex !important;
+    }
 
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Poppins', sans-serif;
-    }
-
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        flex-direction: column;
-        background: #fefeff;
-    }
+    font-family: 'Poppins', sans-serif;
 
     .box {
         position: relative;
@@ -708,8 +850,10 @@ body {
             z-index: 20;
             left: 50%;
             transform: translate(-50%, -50%);
-            :hover {
-                cursor: pointer;
+            cursor: pointer;
+            
+            &:hover {
+                background: #007acc;
             }
         }
     }

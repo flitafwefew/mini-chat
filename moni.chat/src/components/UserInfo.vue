@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onBeforeMount, ref, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useFileTransferStore } from '@/stores/module/useFileTransferStore';
 import { candidate, offer } from '@/api/file';
 import { ElMessage } from 'element-plus';
@@ -226,7 +226,7 @@ onMounted(() => {
 onMounted(() => {
     EventBus.on("on-receive-file", handleFileMsg)
 })
-onBeforeMount(() => {
+onUnmounted(() => {
     EventBus.off("on-receive-file", handleFileMsg)
 })
 

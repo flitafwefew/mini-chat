@@ -103,17 +103,27 @@ function response(event: MessageEvent) {
 }
 
 function connect(tokenStr: string) {
-  if (isConnect || ws) return
+  if (isConnect || ws) {
+    console.log('⚠️ WebSocket已连接或正在连接中，跳过重复连接')
+    return
+  }
+  
+  console.log('🔌 开始连接WebSocket...')
+  
+  // 重置重连状态
+  lockReconnect = false
+  reconnectCount = 0
+  
   isConnect = true
   token = tokenStr
   try {
     // 根据环境选择WebSocket地址
     const wsIp = import.meta.env.DEV 
-      ? 'ws://localhost:3002/ws'     // 开发环境直接连接后端
-      : 'ws://localhost:3002/ws'     // 生产环境直接连接后端
+      ? 'ws://10.33.9.159:3002/ws'     // 开发环境直接连接后端
+      : 'ws://10.33.9.159:3002/ws'     // 生产环境直接连接后端
     ws = new WebSocket(wsIp + '?token=' + token)
     ws.onopen = () => {
-      console.log('Connected to server')
+      console.log('✅ WebSocket连接成功')
       clearTimer()
       sendHeartPack()
     }
@@ -121,7 +131,8 @@ function connect(tokenStr: string) {
     ws.onmessage = response
     ws.onclose = onCloseHandler
     ws.onerror = onCloseHandler
-  } catch {
+  } catch (error) {
+    console.error('❌ WebSocket连接失败:', error)
     onCloseHandler()
   }
 }
@@ -203,18 +214,37 @@ const clearTimer = () => {
 }
 
 const disConnect = () => {
+  console.log('🔌 开始断开WebSocket连接...')
+  
+  // 停止重连
+  lockReconnect = true
+  reconnectCount = 0
+  
+  // 清理所有定时器
   clearHeartPackTimer()
+  clearTimer()
+  
+  // 重置状态
   token = null
+  isConnect = false
+  
+  // 关闭连接
   if (ws) {
     ws.close()
     ws = null
   }
-  isConnect = false
+  
+  console.log('✅ WebSocket连接已完全断开')
+}
+
+const isConnected = () => {
+  return isConnect && ws && ws.readyState === WebSocket.OPEN
 }
 
 export default { 
   connect, 
   disConnect, 
   sendMessage, 
-  sendTyping 
+  sendTyping,
+  isConnected
 }

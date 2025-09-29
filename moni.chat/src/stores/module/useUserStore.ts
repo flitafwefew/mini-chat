@@ -23,13 +23,36 @@ export const useUserStore = defineStore('user', {
             this.token = token
         },
         async logout() {
+            console.log('🚪 开始退出登录流程...')
+            
+            // 1. 先断开WebSocket连接，避免重连干扰
+            try {
+                ws.disConnect()
+                console.log('✅ WebSocket连接已断开')
+            } catch (error) {
+                console.warn('⚠️ WebSocket断开时出错:', error)
+            }
+            
+            // 2. 清除用户状态
             this.user = null
             this.token = ''
-            ws.disConnect()
-            ElMessage.success('退出成功')
-            router.push('/login')
+            this.userMap = {}
+            this.chatList = []
+            this.showUserInfo = false
+            
+            // 3. 清除本地存储
             localStorage.removeItem('user')
             localStorage.removeItem('x-token')
+            console.log('✅ 本地存储已清除')
+            
+            // 4. 显示成功消息
+            ElMessage.success('退出成功')
+            
+            // 5. 跳转到登录页
+            console.log('🔄 准备跳转到登录页...')
+            await router.replace('/login')
+            
+            console.log('✅ 退出登录流程完成')
         },
         clearUser() {
             this.user = null
@@ -55,7 +78,7 @@ export const useUserStore = defineStore('user', {
                     
                     // 检查头像数据
                     const avatarCount = Object.values(this.userMap).filter(user => 
-                        user.avatar && user.avatar.includes('dicebear.com')
+                        user.avatar && typeof user.avatar === 'string' && user.avatar.includes('dicebear.com')
                     ).length
                     console.log(`🎭 包含卡通头像的用户: ${avatarCount}/${Object.keys(this.userMap).length}`)
                 } else {

@@ -449,6 +449,23 @@ const handleVideoAnswerMsg = async (data: any) => {
 }
 // 处理挂断
 const handleHangup = async () => {
+    // 清理定时器
+    handleDestroyTime()
+    
+    // 清理媒体流
+    if (webcamStream.value) {
+        webcamStream.value.getTracks().forEach((track: any) => {
+            track.stop();
+        });
+        webcamStream.value = null;
+    }
+    
+    // 清理WebRTC连接
+    if (pc.value) {
+        pc.value.close();
+        pc.value = null;
+    }
+    
     // 后续处理逻辑
     console.log("userId" + props.targetInfo.userId)
     hangup({
@@ -490,6 +507,23 @@ onMounted(async () => {
 })
 onUnmounted(async () => {
     EventBus.off('on-receive-video', handlerVideoMsg)
+    
+    // 清理定时器
+    handleDestroyTime()
+    
+    // 清理媒体流
+    if (webcamStream.value) {
+        webcamStream.value.getTracks().forEach((track: any) => {
+            track.stop();
+        });
+        webcamStream.value = null;
+    }
+    
+    // 清理WebRTC连接
+    if (pc.value) {
+        pc.value.close();
+        pc.value = null;
+    }
 })
 
 

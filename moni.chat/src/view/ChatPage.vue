@@ -141,6 +141,11 @@ const { direction } = useSwipe(mainCenterRef, {
 
 onMounted(async () => {
     console.log('🚀 ChatPage mounted, 开始加载用户映射...')
+    console.log('👤 当前用户状态:', { 
+        user: userStore.user, 
+        token: userStore.token,
+        hasUserMap: Object.keys(userStore.userMap).length > 0
+    })
     
     try {
         await userStore.getUserMap(true)

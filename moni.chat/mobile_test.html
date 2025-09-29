@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移动端登录测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            width: 100%;
+        }
+        button:hover { background-color: #0056b3; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔧 移动端登录测试</h2>
+        <p><strong>当前访问地址：</strong><span id="currentUrl"></span></p>
+        <p><strong>用户代理：</strong><span id="userAgent"></span></p>
+        
+        <div class="test-section info">
+            <h3>📋 测试说明</h3>
+            <p>此页面用于测试移动端登录功能：</p>
+            <ul>
+                <li>✅ 直接连接后端API（避免代理问题）</li>
+                <li>✅ 移动端网络优化</li>
+                <li>✅ 完整的登录流程测试</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 登录测试</h3>
+            <input type="text" id="username" placeholder="用户名" value="bob">
+            <input type="password" id="password" placeholder="密码" value="123456">
+            <button onclick="testLogin()">测试登录</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 网络连接测试</h3>
+            <button onclick="testNetwork()">测试网络连接</button>
+            <div id="networkResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 显示当前信息
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+
+        // 检测移动端
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        console.log('移动端检测:', isMobile);
+
+        // 测试网络连接
+        async function testNetwork() {
+            const resultDiv = document.getElementById('networkResult');
+            resultDiv.textContent = '正在测试网络连接...';
+            resultDiv.className = 'result info';
+
+            try {
+                // 直接连接后端，避免代理问题
+                const response = await fetch('http://10.33.1.208:3002/api/v1/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        account: 'bob',
+                        password: '123456'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.code === 200) {
+                        resultDiv.textContent = '✅ 网络连接正常！\n登录测试成功\n用户: ' + data.data.user.name + '\nToken: ' + data.data.token.substring(0, 20) + '...';
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.textContent = '⚠️ 网络连接正常但登录失败\n错误信息: ' + data.msg;
+                        resultDiv.className = 'result error';
+                    }
+                } else {
+                    resultDiv.textContent = '❌ 网络连接失败！\n状态码: ' + response.status + '\n状态文本: ' + response.statusText;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ 网络连接异常！\n错误: ' + error.message + '\n可能原因: 网络不通、防火墙阻止、服务未启动';
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 测试登录
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                resultDiv.textContent = '❌ 请输入用户名和密码';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            resultDiv.textContent = '正在测试登录...';
+            resultDiv.className = 'result info';
+
+            try {
+                console.log('🔐 开始登录测试，用户名:', username);
+                
+                // 直接连接后端，避免代理问题
+                const response = await fetch('http://10.33.1.208:3002/api/v1/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        account: username,
+                        password: password
+                    })
+                });
+
+                console.log('📡 登录请求响应状态:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📥 登录响应数据:', data);
+                    
+                    if (data.code === 200) {
+                        // 存储token和用户信息
+                        localStorage.setItem('x-token', data.data.token);
+                        localStorage.setItem('user', JSON.stringify(data.data.user));
+                        
+                        resultDiv.textContent = '✅ 登录成功！\n用户: ' + data.data.user.name + '\n账号: ' + data.data.user.account + '\nToken已保存到localStorage\n\n现在可以跳转到主应用了！';
+                        resultDiv.className = 'result success';
+                        
+                        // 3秒后跳转到主应用
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 3000);
+                    } else {
+                        resultDiv.textContent = '❌ 登录失败！\n错误信息: ' + data.msg;
+                        resultDiv.className = 'result error';
+                    }
+                } else {
+                    resultDiv.textContent = '❌ 登录请求失败！\n状态码: ' + response.status + '\n状态文本: ' + response.statusText;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                console.error('❌ 登录测试失败:', error);
+                resultDiv.textContent = '❌ 登录测试异常！\n错误: ' + error.message + '\n可能原因: 网络不通、后端服务未启动';
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 页面加载时显示当前状态
+        window.onload = function() {
+            console.log('移动端登录测试页面已加载');
+            console.log('当前访问地址:', window.location.href);
+            console.log('用户代理:', navigator.userAgent);
+            console.log('移动端检测:', isMobile);
+        };
+    </script>
+</body>
+</html>
