@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机端登录调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-info { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>手机端登录调试工具</h1>
+    
+    <div class="debug-info">
+        <h3>环境信息</h3>
+        <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+        <p><strong>Hostname:</strong> <span id="hostname"></span></p>
+        <p><strong>Protocol:</strong> <span id="protocol"></span></p>
+        <p><strong>Port:</strong> <span id="port"></span></p>
+        <p><strong>Full URL:</strong> <span id="fullUrl"></span></p>
+    </div>
+
+    <div class="debug-info">
+        <h3>网络配置检测</h3>
+        <p><strong>检测到的API地址:</strong> <span id="apiUrl"></span></p>
+        <p><strong>是否为手机端访问:</strong> <span id="isMobile"></span></p>
+    </div>
+
+    <div class="debug-info">
+        <h3>API连接测试</h3>
+        <button onclick="testLocalhost()">测试 localhost:3002</button>
+        <button onclick="testNetwork()">测试 10.33.1.208:3002</button>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="debug-info">
+        <h3>登录测试</h3>
+        <input type="text" id="username" placeholder="用户名" value="user001">
+        <input type="password" id="password" placeholder="密码" value="123456">
+        <button onclick="testLogin()">测试登录</button>
+        <div id="loginResults"></div>
+    </div>
+
+    <script>
+        // 显示环境信息
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('hostname').textContent = window.location.hostname;
+        document.getElementById('protocol').textContent = window.location.protocol;
+        document.getElementById('port').textContent = window.location.port;
+        document.getElementById('fullUrl').textContent = window.location.href;
+
+        // 检测手机端访问
+        const isMobileAccess = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const SERVICE_URL = isMobileAccess ? 'http://10.33.1.208:3002' : 'http://localhost:3002';
+        
+        document.getElementById('isMobile').textContent = isMobileAccess ? '是' : '否';
+        document.getElementById('apiUrl').textContent = SERVICE_URL;
+
+        // 测试API连接
+        async function testConnection(url) {
+            try {
+                const response = await fetch(url + '/api/v1/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        account: 'user001',
+                        password: '123456'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return { success: true, data: data };
+                } else {
+                    return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+                }
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testLocalhost() {
+            const result = await testConnection('http://localhost:3002');
+            displayTestResult('localhost:3002', result);
+        }
+
+        async function testNetwork() {
+            const result = await testConnection('http://10.33.1.208:3002');
+            displayTestResult('10.33.1.208:3002', result);
+        }
+
+        function displayTestResult(url, result) {
+            const resultsDiv = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = result.success ? 'success' : 'error';
+            div.innerHTML = `<strong>${url}:</strong> ${result.success ? '连接成功' : '连接失败 - ' + result.error}`;
+            if (result.success) {
+                div.innerHTML += `<br>响应: ${JSON.stringify(result.data, null, 2)}`;
+            }
+            resultsDiv.appendChild(div);
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultsDiv = document.getElementById('loginResults');
+            
+            resultsDiv.innerHTML = '<p>正在测试登录...</p>';
+            
+            try {
+                const response = await fetch(SERVICE_URL + '/api/v1/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        account: username,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>登录成功!</h4>
+                            <p><strong>Token:</strong> ${data.data.token.substring(0, 50)}...</p>
+                            <p><strong>用户信息:</strong></p>
+                            <pre>${JSON.stringify(data.data.user, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <h4>登录失败</h4>
+                            <p><strong>错误代码:</strong> ${data.code}</p>
+                            <p><strong>错误信息:</strong> ${data.msg}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>网络错误</h4>
+                        <p><strong>错误信息:</strong> ${error.message}</p>
+                        <p><strong>可能原因:</strong> 网络连接问题、CORS配置问题或服务器未启动</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时自动测试连接
+        window.onload = function() {
+            setTimeout(() => {
+                testLocalhost();
+                testNetwork();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
+
