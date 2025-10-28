@@ -48,18 +48,13 @@
         <!-- 用户信息编辑弹窗 -->
         <UserInfo v-model="userStore.showUserInfo" />
         
-        <!-- 临时头像测试组件 -->
-        <AvatarTest />
+        
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount,watch } from 'vue'
-// import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/module/useUserStore'
-// import { logout } from '@/api/login'
-// import { ElMessage } from 'element-plus'
-// import type { ApiResponse } from '@/types/common'
 import UserInfo from '@/components/UserInfo.vue'
 import ChatList from '@/components/ChatList.vue'
 import Message from '@/components/Message.vue'
@@ -68,39 +63,8 @@ import UserItem from '@/components/UserItem.vue'
 import GroupList from '@/components/GroupList.vue'
 import Avatar from '@/components/Avatar.vue'
 import { useSwipe } from '@vueuse/core'
-// 调试用户映射数据的工具函数
-const debugUserMap = (userStore: any) => {
-    console.log('🔍 === 用户映射调试信息 ===')
-    console.log('用户映射数据:', userStore.userMap)
-    console.log('用户映射键数量:', Object.keys(userStore.userMap).length)
-    
-    // 检查每个用户的头像数据
-    Object.entries(userStore.userMap).forEach(([userId, userData]: [string, any]) => {
-        console.log(`👤 用户 ${userId} (${userData.name}):`, {
-            avatar: userData.avatar,
-            hasAvatar: !!userData.avatar,
-            isCartoonAvatar: userData.avatar && userData.avatar.includes('dicebear.com')
-        })
-    })
-    
-    // 统计头像数据
-    const totalUsers = Object.keys(userStore.userMap).length
-    const usersWithAvatar = Object.values(userStore.userMap).filter((user: any) => user.avatar).length
-    const usersWithCartoonAvatar = Object.values(userStore.userMap).filter((user: any) => 
-        user.avatar && user.avatar.includes('dicebear.com')
-    ).length
-    
-    console.log('📊 === 头像统计 ===')
-    console.log(`总用户数: ${totalUsers}`)
-    console.log(`有头像的用户: ${usersWithAvatar}`)
-    console.log(`有卡通头像的用户: ${usersWithCartoonAvatar}`)
-}
-import AvatarTest from '@/components/AvatarTest.vue'
 
-// const router = useRouter()
 const userStore = useUserStore()
-// const showUserInfo = ref(false)
-// const showSidebars = ref(true)
 const showChatList = ref(false)
 const showGroupList = ref(false)
 const mainCenterRef = ref(null)
@@ -109,7 +73,6 @@ const toggleChatList = (event: MouseEvent) => {
     event.stopPropagation(); // 阻止事件冒泡
     showChatList.value = !showChatList.value;
     showGroupList.value = false;
-    console.log('toggleChatList 被触发，showChatList:', showChatList.value);
 };
 
 const handleOutsideClick = (event: MouseEvent) => {
@@ -120,7 +83,6 @@ const handleOutsideClick = (event: MouseEvent) => {
 
     if (showChatList.value && !chatList.contains(target) && target!== avatar) {
         showChatList.value = false
-        console.log('showChatList 被设置为 false', showChatList.value)
     }
     if (showGroupList.value && !groupList.contains(target) && target!== avatar) {
         showGroupList.value = false
@@ -132,7 +94,6 @@ const toggleGroupList = (event: MouseEvent) => {
     event.stopPropagation() // 阻止事件冒泡
     showGroupList.value = !showGroupList.value;
     showChatList.value = false;
-    console.log('toggleGroupList 被触发，showGroupList:', showGroupList.value)
 }
 
 const { direction } = useSwipe(mainCenterRef, {
@@ -140,19 +101,10 @@ const { direction } = useSwipe(mainCenterRef, {
 });
 
 onMounted(async () => {
-    console.log('🚀 ChatPage mounted, 开始加载用户映射...')
-    console.log('👤 当前用户状态:', { 
-        user: userStore.user, 
-        token: userStore.token,
-        hasUserMap: Object.keys(userStore.userMap).length > 0
-    })
-    
     try {
         await userStore.getUserMap(true)
-        console.log('✅ 用户映射加载完成')
-        debugUserMap(userStore)
     } catch (error) {
-        console.error('❌ 用户映射加载失败:', error)
+        console.error('用户映射加载失败:', error)
     }
     
     const handleSwipe = () => {
@@ -164,7 +116,6 @@ onMounted(async () => {
             }
         }
     };
-    // direction.value = null;
     watch(direction, handleSwipe);
 });
 

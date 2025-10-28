@@ -115,7 +115,6 @@ import { login, register } from '@/api/login'
 import { ElMessage } from 'element-plus'
 import type { LoginResponse, RegisterResponse } from '@/types/login'
 import { useUserStore } from '@/stores/module/useUserStore'
-// import MobileLogin from '@/components/MobileLogin.vue'
 const router = useRouter()
 const isLogin = ref(true)
 const isAnimating = ref(false)
@@ -154,32 +153,20 @@ const handleSwitch = () => {
 
 // 处理登录
 const handleLogin = async () => {
-    console.log('🚀 handleLogin函数被调用')
-    console.log('📱 当前设备类型:', window.innerWidth <= 700 ? '移动端' : '桌面端')
-    console.log('📝 登录表单数据:', loginForm.value)
-    
     if (!loginForm.value.userName || !loginForm.value.password) {
-        console.log('❌ 用户名或密码为空')
         ElMessage.error('请输入用户名和密码')
         return
     }
 
-    console.log('🔐 开始登录:', { account: loginForm.value.userName })
-
     try {
         // 检测移动端环境
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        console.log('📱 移动端检测结果:', isMobile);
         
         let res: LoginResponse;
         
         if (isMobile) {
-            // 移动端直接使用fetch API，和调试页面完全相同的逻辑
-            console.log('📱 使用移动端直接连接方式');
-            console.log('📡 请求URL: http://10.33.9.159:3002/api/v1/user/login');
-            console.log('📡 请求数据:', { account: loginForm.value.userName, password: loginForm.value.password });
-            
-            const response = await fetch('http://10.33.9.159:3002/api/v1/user/login', {
+            // 移动端直接使用fetch API
+            const response = await fetch('http://10.33.123.133:3002/api/v1/user/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -190,39 +177,28 @@ const handleLogin = async () => {
                 })
             });
             
-            console.log('📡 响应状态:', response.status, response.statusText);
-            
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('❌ 响应错误:', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
             
             res = await response.json();
-            console.log('📡 响应数据:', res);
         } else {
             // 桌面端使用原有的Http类
-            console.log('🖥️ 使用桌面端Http类');
             res = await login({
                 account: loginForm.value.userName,
                 password: loginForm.value.password
             }) as LoginResponse;
         }
         
-        console.log('📝 登录响应:', res)
-        console.log('📝 响应类型:', typeof res)
-        console.log('📝 响应结构:', JSON.stringify(res, null, 2))
-        
         // 检查响应是否有效
         if (!res) {
-            console.error('❌ 登录响应为空')
             ElMessage.error('登录失败，服务器无响应')
             return
         }
         
         // 检查响应格式
         if (typeof res.code === 'undefined') {
-            console.error('❌ 登录响应格式错误，缺少code字段:', res)
             ElMessage.error('登录失败，响应格式错误')
             return
         }
@@ -230,7 +206,6 @@ const handleLogin = async () => {
         if (res.code === 200) {
             // 检查必要的数据字段
             if (!res.data || !res.data.token || !res.data.user) {
-                console.error('❌ 登录成功但数据不完整:', res.data)
                 ElMessage.error('登录失败，用户数据不完整')
                 return
             }
@@ -243,44 +218,30 @@ const handleLogin = async () => {
             userStore.setToken(res.data.token)
             userStore.setUser(res.data.user)
             
-            console.log('✅ 用户信息已存储:', res.data.user)
-            console.log('✅ Token已存储:', res.data.token.substring(0, 20) + '...')
-            
             // 获取用户映射，确保头像数据可用（失败不影响登录）
             try {
                 await userStore.getUserMap()
-                console.log('✅ 用户映射获取成功')
             } catch (error) {
                 console.warn('获取用户映射失败，但不影响登录:', error)
             }
             
             ElMessage.success('登录成功')
-            console.log('🚀 准备跳转到聊天页面')
             
             // 直接跳转，不使用Vue Router
-            console.log('🔄 直接跳转到主应用...');
             window.location.href = '/';
         } else {
-            console.error('❌ 登录失败:', res.msg, '状态码:', res.code)
             ElMessage.error(res.msg || '登录失败')
         }
     } catch (error: any) {
-        console.error('❌ 登录异常:', error)
-        console.error('❌ 错误类型:', typeof error)
-        console.error('❌ 错误详情:', JSON.stringify(error, null, 2))
-        
         // 处理不同类型的错误
         if (error && typeof error === 'object' && error.code && error.msg) {
             // 这是后端返回的标准错误格式
-            console.error('❌ 后端错误:', error.msg)
             ElMessage.error(error.msg || '登录失败')
         } else if (error && typeof error === 'string') {
             // 这是网络错误或其他字符串错误
-            console.error('❌ 网络错误:', error)
             ElMessage.error(error || '登录失败，请检查网络连接')
         } else {
             // 其他未知错误
-            console.error('❌ 未知错误:', error)
             ElMessage.error('登录失败，请稍后重试')
         }
     }
@@ -342,45 +303,6 @@ const handleRegister = async () => {
 const sendVerifyCode = async () => {
     ElMessage.warning('验证码功能暂时不可用，请直接注册')
     return
-    
-    // 以下代码暂时注释，等后端实现验证码API后再启用
-    /*
-    if (!registerForm.value.email) {
-        ElMessage.error('请输入邮箱')
-        return
-    }
-    // 验证邮箱格式
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(registerForm.value.email)) {
-        ElMessage.error('请输入正确的邮箱格式')
-        return
-    }
-
-    try {
-        const res = await getCode({ email: registerForm.value.email }) as CodeResponese
-        if (res.code === 0) {
-            ElMessage.success('验证码已发送')
-            // 开始倒计时
-            countdown.value = 60
-            const timer = setInterval(() => {
-                countdown.value--
-                if (countdown.value <= 0) {
-                    clearInterval(timer)
-                    // 从数组中移除已完成的定时器
-                    const index = timers.indexOf(timer)
-                    if (index > -1) {
-                        timers.splice(index, 1)
-                    }
-                }
-            }, 1000)
-            timers.push(timer)
-        } else {
-            ElMessage.error(res.msg || '发送验证码失败')
-        }
-    } catch (error: any) {
-        ElMessage.error(error.message || '发送验证码失败，请重试')
-    }
-    */
 }
 
 onMounted(() => {
@@ -400,22 +322,6 @@ onMounted(() => {
     })
 
     // 手机端按钮已经在模板中绑定了@click事件，不需要重复绑定
-    // 注释掉重复的事件绑定，避免冲突
-    /*
-    const mobileButtons = document.querySelectorAll('.btn')
-    mobileButtons.forEach(button => {
-        const handler = (e: Event) => {
-            e.preventDefault()
-            if (isLogin.value) {
-                handleLogin()
-            } else {
-                handleRegister()
-            }
-        }
-        button.addEventListener('click', handler)
-        eventListeners.push({ element: button, event: 'click', handler })
-    })
-    */
 
     const switchBtn = document.querySelectorAll('.switch-btn')
     switchBtn.forEach(button => {
@@ -455,7 +361,6 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    // background-image: linear-gradient(90deg, #e0c3fc, #8ec5fc 100%);
     background-size: cover;
     background-position: center;
     position: absolute;
@@ -476,10 +381,6 @@ onUnmounted(() => {
     }
 
     @media screen and (min-width: 700px) {
-        // position: absolute;
-        // top: 0%;
-        // left: 0%;
-
     }
 }
 
@@ -493,7 +394,6 @@ body {
 }
 
 .shell {
-    // position: relative;
     width: 1000px;
     min-width: 1000px;
     min-height: 600px;
@@ -900,8 +800,7 @@ body {
         inset: 2px;
         background: #ECF0F3;
         color: #ffffff;
-        //阴影
-        box-shadow: 2px 10px 5px rgba(255, 255, 255, 0.2); // 添加阴影效果
+        box-shadow: 2px 10px 5px rgba(255, 255, 255, 0.2);
         padding: 50px 40px;
         border-radius: 8px;
         z-index: 2;

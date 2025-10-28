@@ -1,5 +1,6 @@
 import EventBus from '@/utils/eventBus.ts'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/module/useUserStore'
 
 interface WSMessage {
   type: 'message' | 'message_sent' | 'typing' | 'pong' | 'error' | 'notify' | 'video' | 'file';
@@ -47,7 +48,37 @@ function response(event: MessageEvent) {
     switch (wsContent.type) {
       case 'message': {
         if (wsContent.data) {
-          EventBus.emit('on-receive-msg', wsContent.data)
+          // 转换后端的snake_case字段为前端的camelCase字段
+          const userStore = useUserStore()
+          const fromUser = userStore.userMap[wsContent.data.from_id || '']
+          
+          const transformedData = {
+            id: wsContent.data.id,
+            fromId: wsContent.data.from_id,
+            toId: wsContent.data.to_id,
+            message: wsContent.data.msg_content,
+            type: wsContent.data.type,
+            source: wsContent.data.source,
+            createTime: wsContent.data.create_time,
+            updateTime: wsContent.data.update_time || wsContent.data.create_time,
+            fromInfo: wsContent.data.fromInfo || (fromUser ? {
+              id: fromUser.id,
+              name: fromUser.name,
+              avatar: fromUser.avatar,
+              type: 'user',
+              badge: null
+            } : {
+              id: wsContent.data.from_id,
+              name: wsContent.data.from_id === 'ai_assistant_001' ? 'AI助手' : '未知用户',
+              avatar: null,
+              type: 'user',
+              badge: null
+            }),
+            referenceMsg: null,
+            atUser: null,
+            isShowTime: false
+          }
+          EventBus.emit('on-receive-msg', transformedData)
         }
         break
       }
@@ -119,8 +150,8 @@ function connect(tokenStr: string) {
   try {
     // 根据环境选择WebSocket地址
     const wsIp = import.meta.env.DEV 
-      ? 'ws://10.33.9.159:3002/ws'     // 开发环境直接连接后端
-      : 'ws://10.33.9.159:3002/ws'     // 生产环境直接连接后端
+      ? 'ws://10.33.123.133:3002/ws'     // 开发环境直接连接后端
+      : 'ws://10.33.123.133:3002/ws'     // 生产环境直接连接后端
     ws = new WebSocket(wsIp + '?token=' + token)
     ws.onopen = () => {
       console.log('✅ WebSocket连接成功')

@@ -41,7 +41,10 @@
                 </div>
                 <div class="chat-info">
                     <div class="chat-header">
-                        <span class="chat-name">{{ chat.targetInfo.name }}</span>
+                        <span class="chat-name">
+                            {{ chat.targetInfo.name }}
+                            <span v-if="isAIUser(chat.targetId)" class="ai-badge" title="AI助手">🤖</span>
+                        </span>
                         <span class="chat-time">{{ formatTime(chat.updateTime) }}</span>
                     </div>
                     <div v-if="chat.lastMessage && chat.lastMessage.type === 'emoji'" class="chat-message">
@@ -197,6 +200,15 @@ const handleLogout = ()=>{
 // 获取用户头像，处理头像URL无法访问的情况
 const getUserAvatar = (targetId: string): string | null => {
     const userInfo = userStore.userMap[targetId]
+    
+    // 特别调试 AI 助手
+    if (targetId === 'ai_assistant_001') {
+        console.log('🤖 AI助手头像调试:')
+        console.log('  - targetId:', targetId)
+        console.log('  - userInfo:', userInfo)
+        console.log('  - avatar:', userInfo?.avatar)
+    }
+    
     if (!userInfo?.avatar) return null
     
     // 检查头像URL是否有效
@@ -210,7 +222,17 @@ const getUserAvatar = (targetId: string): string | null => {
     
     return avatarUrl
 }
-onMounted(() => {
+
+// 判断是否是AI用户
+const isAIUser = (targetId: string): boolean => {
+    return targetId === 'ai_assistant_001'
+}
+onMounted(async () => {
+    // 强制刷新用户映射，确保获取最新头像
+    await userStore.getUserMap(true)
+    console.log('✅ 用户映射已刷新，包含用户:', Object.keys(userStore.userMap).length)
+    console.log('🤖 AI助手数据:', userStore.userMap['ai_assistant_001'])
+    
     chatListStore.fetchAllChats()
     // 监听新消息
     EventBus.on('on-receive-msg', handleNewMessage)
@@ -328,6 +350,15 @@ onBeforeUnmount(() => {
                     text-overflow: ellipsis;
                     overflow: hidden;
                     white-space: nowrap;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    
+                    .ai-badge {
+                        font-size: 16px;
+                        line-height: 1;
+                        animation: aiPulse 2s ease-in-out infinite;
+                    }
                 }
 
                 .chat-time {
@@ -403,6 +434,17 @@ onBeforeUnmount(() => {
                 font-size: 17px;
             }
         }
+    }
+}
+
+@keyframes aiPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
     }
 }
 </style>

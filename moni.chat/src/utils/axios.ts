@@ -10,7 +10,7 @@ function isMobileDevice() {
 // 获取服务URL的函数
 function getServiceUrl() {
   const isMobile = isMobileDevice();
-  return import.meta.env.VITE_HTTP_URL || (isMobile ? 'http://10.33.9.159:3002' : (import.meta.env.DEV ? '/api' : 'http://10.33.9.159:3002'));
+  return import.meta.env.VITE_HTTP_URL || (isMobile ? 'http://10.33.123.133:3002' : (import.meta.env.DEV ? '/api' : 'http://10.33.123.133:3002'));
 }
 
 const SERVICE_URL = getServiceUrl();

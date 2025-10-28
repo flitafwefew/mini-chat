@@ -1,6 +1,8 @@
 const { Message, ChatList, User, ChatGroup } = require('../models/associations');
 const { v4: uuidv4 } = require('uuid');
 const { Op } = require('sequelize');
+const { isAIMessage, getAIResponse, getAIUserId } = require('../services/aiService');
+const { getOnlineUsers } = require('../config/ws');
 
 // 发送消息
 const sendMessage = async (req, res) => {
@@ -121,6 +123,20 @@ const sendMessage = async (req, res) => {
         updateTime: message.update_time
       }
     });
+
+    // 检查是否是发送给AI的消息，如果是则异步处理AI回复
+    console.log(`[AI检查] toId: ${toId}, type: ${type}, isAIMessage: ${isAIMessage(toId)}`);
+    if (isAIMessage(toId) && type === 'text') {
+      console.log('[AI处理] 开始调用handleAIResponse');
+      handleAIResponse(toId, from_id, messageContent).catch(error => {
+        console.error('AI自动回复失败:', error);
+      });
+    } else {
+      console.log('[AI处理] 跳过 - 原因:', {
+        isAI: isAIMessage(toId),
+        isText: type === 'text'
+      });
+    }
   } catch (error) {
     console.error('发送消息错误:', error);
     res.status(500).json({
@@ -634,6 +650,113 @@ const sendPrivateMessage = async (req, res) => {
   }
 };
 
+// AI自动回复处理函数
+const handleAIResponse = async (aiUserId, userUserId, userMessage) => {
+  try {
+    console.log(`收到用户 ${userUserId} 发给AI的消息: ${userMessage}`);
+    
+    // 解析消息内容（前端可能发送JSON格式的消息）
+    let parsedMessage = userMessage;
+    try {
+      const parsed = JSON.parse(userMessage);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].content) {
+        // 前端格式: [{"type":"text","content":"消息内容"}]
+        parsedMessage = parsed[0].content;
+        console.log(`解析后的消息内容: ${parsedMessage}`);
+      }
+    } catch (e) {
+      // 如果解析失败，使用原始消息
+      parsedMessage = userMessage;
+    }
+    
+    // 获取最近的对话历史（最多5条）用于上下文
+    const recentMessages = await Message.findAll({
+      where: {
+        [Op.or]: [
+          { from_id: userUserId, to_id: aiUserId },
+          { from_id: aiUserId, to_id: userUserId }
+        ]
+      },
+      order: [['create_time', 'DESC']],
+      limit: 5
+    });
+
+    // 构建对话历史（从旧到新）
+    const conversationHistory = recentMessages
+      .reverse()
+      .slice(0, -1) // 排除最后一条（当前消息）
+      .map(msg => {
+        // 同样解析历史消息
+        let content = msg.msg_content;
+        try {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].content) {
+            content = parsed[0].content;
+          }
+        } catch (e) {
+          // 使用原始内容
+        }
+        return {
+          role: msg.from_id === userUserId ? 'user' : 'assistant',
+          content: content
+        };
+      });
+
+    // 调用AI服务获取回复
+    const aiReply = await getAIResponse(parsedMessage, conversationHistory);
+    
+    console.log(`AI回复: ${aiReply}`);
+    
+    // 创建AI回复消息
+    const messageId = uuidv4();
+    const now = new Date();
+    
+    const aiMessage = await Message.create({
+      id: messageId,
+      from_id: aiUserId,
+      to_id: userUserId,
+      msg_content: aiReply,
+      type: 'text',
+      source: 'ai',
+      status: 'sent',
+      create_time: now,
+      update_time: now
+    });
+
+    // 更新双方的聊天列表
+    await updateChatList(aiUserId, userUserId, aiReply, 'private', messageId);
+    await updateChatList(userUserId, aiUserId, aiReply, 'private', messageId);
+    
+    // 通过WebSocket发送AI回复给用户
+    const onlineUsers = getOnlineUsers();
+    const userWs = onlineUsers.get(userUserId);
+    if (userWs && userWs.readyState === 1) { // 1 = OPEN
+      userWs.send(JSON.stringify({
+        type: 'message',
+        data: {
+          id: aiMessage.id,
+          from_id: aiMessage.from_id,
+          to_id: aiMessage.to_id,
+          msg_content: aiMessage.msg_content,
+          type: aiMessage.type,
+          source: aiMessage.source,
+          create_time: aiMessage.create_time
+        }
+      }));
+      console.log('AI回复消息已通过WebSocket推送给用户');
+    } else {
+      console.log('用户不在线，WebSocket消息未发送');
+    }
+    
+    console.log('AI回复消息已保存并发送');
+    
+    return aiMessage;
+  } catch (error) {
+    console.error('处理AI回复时出错:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendMessage,
   sendGroupMessage,
@@ -642,5 +765,6 @@ module.exports = {
   getChatList,
   getGroupChatList,
   getPrivateChatList,
-  markAsRead
+  markAsRead,
+  handleAIResponse
 };
