@@ -24,12 +24,17 @@ router.beforeEach(async (to, from, next) => {
   let user = window.localStorage.getItem('user')
   const userStore = useUserStore()
   
+  // 检测移动端
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  
   console.log('🔍 路由守卫检查:', { 
     to: to.path, 
     from: from.path,
     token: !!token, 
     user: !!user,
-    matched: to.matched.length
+    matched: to.matched.length,
+    isMobile: isMobile,
+    userAgent: navigator.userAgent.substring(0, 50) + '...'
   })
   
   if (token) {
@@ -62,6 +67,15 @@ router.beforeEach(async (to, from, next) => {
     } catch (error) {
       console.error('路由守卫处理token时出错:', error)
     }
+  }
+  
+  // 移动端特殊处理：如果token存在但用户信息无效，清除token
+  if (isMobile && token && !user) {
+    console.log('📱 移动端检测到无效token，清除并重定向到登录页')
+    localStorage.removeItem('x-token')
+    localStorage.removeItem('user')
+    next({ path: '/login' })
+    return
   }
   
   // 没有token且不是登录页面，重定向到登录页

@@ -2,9 +2,14 @@ const { Server } = require('ws');
 const jwt = require('jsonwebtoken');
 const { User, Message, ChatList } = require('../models/associations');
 const { v4: uuidv4 } = require('uuid');
+const { isAIMessage, getAIResponse, getAIUserId } = require('../services/aiService');
+const { Op } = require('sequelize');
 
 // 存储在线用户
 const onlineUsers = new Map();
+
+// 导出onlineUsers供其他模块使用
+const getOnlineUsers = () => onlineUsers;
 
 const handleWebSocket = (wss) => {
   wss.on('connection', (ws, req) => {
@@ -139,6 +144,13 @@ const handleChatMessage = async (message, ws, fromUserId) => {
       }
     }));
     
+    // 检查是否是发送给AI的消息，如果是则异步处理AI回复
+    if (isAIMessage(to_id) && type === 'text') {
+      handleAIResponseWS(to_id, fromUserId, msg_content).catch(error => {
+        console.error('AI自动回复失败:', error);
+      });
+    }
+    
   } catch (error) {
     console.error('处理聊天消息失败:', error);
     ws.send(JSON.stringify({
@@ -199,4 +211,107 @@ const updateChatList = async (userId, fromId, lastMsgContent, type) => {
   }
 };
 
-module.exports = { handleWebSocket };
+// AI自动回复处理函数（WebSocket版本）
+const handleAIResponseWS = async (aiUserId, userUserId, userMessage) => {
+  try {
+    console.log(`[WebSocket] 收到用户 ${userUserId} 发给AI的消息: ${userMessage}`);
+    
+    // 解析消息内容（前端可能发送JSON格式的消息）
+    let parsedMessage = userMessage;
+    try {
+      const parsed = JSON.parse(userMessage);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].content) {
+        // 前端格式: [{"type":"text","content":"消息内容"}]
+        parsedMessage = parsed[0].content;
+        console.log(`[WebSocket] 解析后的消息内容: ${parsedMessage}`);
+      }
+    } catch (e) {
+      // 如果解析失败，使用原始消息
+      parsedMessage = userMessage;
+    }
+    
+    // 获取最近的对话历史（最多5条）用于上下文
+    const recentMessages = await Message.findAll({
+      where: {
+        [Op.or]: [
+          { from_id: userUserId, to_id: aiUserId },
+          { from_id: aiUserId, to_id: userUserId }
+        ]
+      },
+      order: [['create_time', 'DESC']],
+      limit: 5
+    });
+
+    // 构建对话历史（从旧到新）
+    const conversationHistory = recentMessages
+      .reverse()
+      .slice(0, -1) // 排除最后一条（当前消息）
+      .map(msg => {
+        // 同样解析历史消息
+        let content = msg.msg_content;
+        try {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].content) {
+            content = parsed[0].content;
+          }
+        } catch (e) {
+          // 使用原始内容
+        }
+        return {
+          role: msg.from_id === userUserId ? 'user' : 'assistant',
+          content: content
+        };
+      });
+
+    // 调用AI服务获取回复
+    const aiReply = await getAIResponse(parsedMessage, conversationHistory);
+    
+    console.log(`[WebSocket] AI回复: ${aiReply}`);
+    
+    // 创建AI回复消息
+    const messageId = uuidv4();
+    const now = new Date();
+    
+    const aiMessage = await Message.create({
+      id: messageId,
+      from_id: aiUserId,
+      to_id: userUserId,
+      msg_content: aiReply,
+      type: 'text',
+      source: 'ai',
+      status: 'sent',
+      create_time: now,
+      update_time: now
+    });
+
+    // 更新双方的聊天列表
+    await updateChatList(aiUserId, userUserId, aiReply, 'private');
+    await updateChatList(userUserId, aiUserId, aiReply, 'private');
+    
+    // 通过WebSocket发送AI回复给用户
+    const userWs = onlineUsers.get(userUserId);
+    if (userWs && userWs.readyState === 1) { // 1 = OPEN
+      userWs.send(JSON.stringify({
+        type: 'message',
+        data: {
+          id: aiMessage.id,
+          from_id: aiMessage.from_id,
+          to_id: aiMessage.to_id,
+          msg_content: aiMessage.msg_content,
+          type: aiMessage.type,
+          source: aiMessage.source,
+          create_time: aiMessage.create_time
+        }
+      }));
+    }
+    
+    console.log('[WebSocket] AI回复消息已保存并发送');
+    
+    return aiMessage;
+  } catch (error) {
+    console.error('[WebSocket] 处理AI回复时出错:', error);
+    throw error;
+  }
+};
+
+module.exports = { handleWebSocket, getOnlineUsers };

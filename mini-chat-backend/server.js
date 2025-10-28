@@ -26,23 +26,16 @@ wss.on('error', (error) => {
 app.use(cors());
 app.use(express.json());
 
-// 添加请求日志中间件
-app.use((req, res, next) => {
+// 添加请求日志中间件（仅记录API请求）
+app.use('/api', (req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
   console.log('Body:', req.body);
   next();
 });
 
-// 添加错误处理中间件
-app.use((err, req, res, next) => {
-  console.error('服务器错误:', err);
-  res.status(500).json({
-    code: 500,
-    msg: '服务器内部错误',
-    data: null
-  });
-});
+// 静态文件服务 - 提供头像等静态资源
+app.use(express.static('public'));
 
 // 路由
 app.use('/api/v1/user', require('./routes/user'));
@@ -585,6 +578,16 @@ async function handleVideoCallMessage(message, ws) {
     }));
   }
 }
+
+// 添加错误处理中间件（必须在所有路由之后）
+app.use((err, req, res, next) => {
+  console.error('服务器错误:', err);
+  res.status(500).json({
+    code: 500,
+    msg: '服务器内部错误',
+    data: null
+  });
+});
 
 // 同步数据库并启动服务
 sequelize.sync().then(() => {
