@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>头像测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #333;
+        }
+        img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #0090F0;
+        }
+        .info {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI助手头像测试页面</h1>
+    
+    <div class="test-section">
+        <h2>测试1: 相对路径 (/avatars/image.png)</h2>
+        <img id="img1" src="/avatars/image.png" alt="AI头像" onerror="handleError(1)">
+        <div class="info" id="info1">加载中...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试2: 完整URL (http://10.33.47.27:3002/avatars/image.png)</h2>
+        <img id="img2" src="http://10.33.47.27:3002/avatars/image.png" alt="AI头像" onerror="handleError(2)">
+        <div class="info" id="info2">加载中...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试3: localhost (http://localhost:3002/avatars/image.png)</h2>
+        <img id="img3" src="http://localhost:3002/avatars/image.png" alt="AI头像" onerror="handleError(3)">
+        <div class="info" id="info3">加载中...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>API测试: 获取用户映射</h2>
+        <button onclick="testAPI()">点击测试API</button>
+        <div class="info" id="api-info">等待测试...</div>
+    </div>
+
+    <script>
+        function handleError(num) {
+            document.getElementById(`info${num}`).innerHTML = 
+                '<span class="error">❌ 加载失败</span>';
+        }
+        
+        // 监听图片加载成功
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`img${i}`).addEventListener('load', function() {
+                document.getElementById(`info${i}`).innerHTML = 
+                    '<span class="success">✅ 加载成功</span>';
+            });
+        }
+        
+        async function testAPI() {
+            const infoDiv = document.getElementById('api-info');
+            infoDiv.innerHTML = '正在请求API...';
+            
+            try {
+                const response = await fetch('/api/v1/user/list/map', {
+                    headers: {
+                        'x-token': localStorage.getItem('x-token') || ''
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200 && data.data) {
+                    const aiUser = data.data['ai_assistant_001'];
+                    if (aiUser) {
+                        infoDiv.innerHTML = `
+                            <div class="success">✅ API调用成功</div>
+                            <div>AI用户名: ${aiUser.name}</div>
+                            <div>avatar字段: ${aiUser.avatar || '无'}</div>
+                            <div>portrait字段: ${aiUser.portrait || '无'}</div>
+                            <div>在线状态: ${aiUser.is_online ? '在线' : '离线'}</div>
+                        `;
+                    } else {
+                        infoDiv.innerHTML = '<span class="error">❌ 未找到AI用户</span>';
+                    }
+                } else {
+                    infoDiv.innerHTML = `<span class="error">❌ API返回错误: ${data.msg}</span>`;
+                }
+            } catch (error) {
+                infoDiv.innerHTML = `<span class="error">❌ 请求失败: ${error.message}</span>`;
+            }
+        }
+        
+        // 显示当前URL
+        console.log('当前页面URL:', window.location.href);
+        console.log('当前baseURL:', window.location.origin);
+    </script>
+</body>
+</html>

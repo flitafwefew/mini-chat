@@ -159,6 +159,9 @@ const handleFileChange = async () => {
         const formData = new FormData();
         formData.append('file', file);
         try {
+            const fileTransferStore = useFileTransferStore();
+            // 修复：设置目标用户ID，确保后续的 offer 等操作能正确发送
+            fileTransferStore.targetId = messageStore.targetId;
             await invite({
                 userId: messageStore.targetId,
                 fileInfo: {
@@ -166,11 +169,11 @@ const handleFileChange = async () => {
                     "size": file.size,
                 }
             })
-            useFileTransferStore().isSendFile = true;
+            fileTransferStore.isSendFile = true;
             // useFileTransferStore().setFile(file);
             // 将选择的文件赋值给 selectedFile 变量
             selectedFile.value = file;
-            console.log('文件传输邀请成功');
+            console.log('📤 文件传输邀请成功，目标用户:', messageStore.targetId);
         } catch (error) {
             console.error('文件上传失败', error);
         }

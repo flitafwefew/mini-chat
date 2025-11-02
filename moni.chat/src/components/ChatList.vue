@@ -248,7 +248,7 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     /* 确保高度为固定值或有最大高度限制，超出部分显示滚动条 */
-    max-height: 600px;
+    max-height: 800px;
     overflow-y: auto;
     background: #fff;
     border-radius: 8px;

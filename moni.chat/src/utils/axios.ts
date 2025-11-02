@@ -2,15 +2,31 @@ import axios, { type InternalAxiosRequestConfig, type AxiosResponse, AxiosHeader
 import { useGlobalStore } from '@/stores/module/useGlobalStore.js';
 import router from '@/router';
 import { ElMessage } from 'element-plus';
-// 检测移动端环境的函数
+// 检测移动端环境的函数（改进版，更准确）
 function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // 方法1: 检测 userAgent（包含常见移动设备标识）
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i.test(userAgent);
+  
+  // 方法2: 检测触摸屏支持（移动设备通常有触摸屏）
+  const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || (navigator as any).msMaxTouchPoints > 0;
+  
+  // 方法3: 检测屏幕尺寸（作为辅助判断）
+  const isSmallScreen = window.innerWidth <= 768 || window.screen.width <= 768;
+  
+  // 综合判断：如果是移动端 UA 或者（有触摸屏且屏幕较小），则认为是移动端
+  const isMobile = isMobileUA || (hasTouchScreen && isSmallScreen);
+  
+  // 排除平板（如果需要区分手机和平板，可以单独处理）
+  // const isTablet = /ipad|android(?!.*mobile)|tablet/i.test(userAgent);
+  
+  return isMobile;
 }
 
 // 获取服务URL的函数
 function getServiceUrl() {
   const isMobile = isMobileDevice();
-  return import.meta.env.VITE_HTTP_URL || (isMobile ? 'http://10.33.123.133:3002' : (import.meta.env.DEV ? '/api' : 'http://10.33.123.133:3002'));
+  return import.meta.env.VITE_HTTP_URL || (isMobile ? 'http://10.34.39.65:3002' : (import.meta.env.DEV ? '/api' : 'http://10.34.39.65:3002'));
 }
 
 const SERVICE_URL = getServiceUrl();
@@ -66,7 +82,20 @@ export default class Http {
     
     // 检测移动端环境（只检测一次）
     const isMobile = isMobileDevice();
-    console.log('📱 移动端检测结果:', isMobile);
+    if (process.env.NODE_ENV === 'development') {
+      const userAgent = navigator.userAgent || '';
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const screenWidth = window.innerWidth;
+      console.log('📱 移动端检测详情:', {
+        结果: isMobile,
+        userAgent: userAgent.substring(0, 50) + '...',
+        触摸屏支持: hasTouch,
+        屏幕宽度: screenWidth,
+        maxTouchPoints: navigator.maxTouchPoints
+      });
+    } else {
+      console.log('📱 移动端检测结果:', isMobile);
+    }
     
     for (let attempt = 1; attempt <= Http.MAX_RETRIES; attempt++) {
       try {

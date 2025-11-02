@@ -133,7 +133,7 @@ onUnmounted(() => {
 
     @media screen and (max-width: 700px) {
         height: 100%;
-        max-height: 100%;
+        max-height: 600px;
         background: #fff;
         // border:#24E68A 3px solid;
     }

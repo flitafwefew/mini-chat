@@ -122,8 +122,22 @@ function response(event: MessageEvent) {
         break
       }
       case 'file': {
+        console.log('📁 [WebSocket] 收到文件传输消息:', wsContent);
+        console.log('📁 [WebSocket] 消息类型:', wsContent.type);
+        console.log('📁 [WebSocket] content内容:', wsContent.content);
         if (wsContent.content) {
+          console.log('📁 [WebSocket] content类型:', wsContent.content.type);
+          if (wsContent.content.type === 'answer') {
+            console.log('📁 [WebSocket] answer消息 - desc:', wsContent.content.desc ? {
+              type: wsContent.content.desc.type,
+              sdp长度: wsContent.content.desc.sdp?.length || 0,
+              sdp前50字符: wsContent.content.desc.sdp?.substring(0, 50) || 'N/A'
+            } : 'desc为空');
+          }
+          console.log('📁 [WebSocket] 发送 on-receive-file 事件，内容:', wsContent.content);
           EventBus.emit('on-receive-file', wsContent.content)
+        } else {
+          console.warn('⚠️ [WebSocket] 文件消息缺少 content 字段');
         }
         break
       }
@@ -150,8 +164,8 @@ function connect(tokenStr: string) {
   try {
     // 根据环境选择WebSocket地址
     const wsIp = import.meta.env.DEV 
-      ? 'ws://10.33.123.133:3002/ws'     // 开发环境直接连接后端
-      : 'ws://10.33.123.133:3002/ws'     // 生产环境直接连接后端
+      ? 'ws://10.34.39.65:3002/ws'     // 开发环境直接连接后端
+      : 'ws://10.34.39.65:3002/ws'     // 生产环境直接连接后端
     ws = new WebSocket(wsIp + '?token=' + token)
     ws.onopen = () => {
       console.log('✅ WebSocket连接成功')

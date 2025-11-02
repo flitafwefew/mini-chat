@@ -1,4 +1,4 @@
-const { Server } = require('ws');
+const { Server, WebSocket: WS } = require('ws');
 const jwt = require('jsonwebtoken');
 const { User, Message, ChatList } = require('../models/associations');
 const { v4: uuidv4 } = require('uuid');
@@ -13,11 +13,13 @@ const getOnlineUsers = () => onlineUsers;
 
 const handleWebSocket = (wss) => {
   wss.on('connection', (ws, req) => {
-    console.log('新的WebSocket连接');
+    console.log('🔌 新的WebSocket连接');
     
     // 从查询参数获取token
     const url = new URL(req.url, `http://${req.headers.host}`);
     const token = url.searchParams.get('token');
+    
+    console.log(`🔑 Token状态:`, token ? `存在 (长度: ${token.length})` : '不存在');
     
     let userId = null;
     
@@ -26,7 +28,9 @@ const handleWebSocket = (wss) => {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         userId = decoded.userId;
-        onlineUsers.set(userId, ws);
+        // 统一转换为字符串类型存储，确保查找时类型一致
+        const userIdStr = String(userId);
+        onlineUsers.set(userIdStr, ws);
         
         // 更新用户在线状态
         User.update(
@@ -34,12 +38,15 @@ const handleWebSocket = (wss) => {
           { where: { id: userId } }
         );
         
-        console.log(`用户 ${userId} 已上线`);
+        console.log(`✅ 用户 ${userIdStr} 已上线 (类型: ${typeof userIdStr})`);
+        console.log(`📊 当前在线用户数: ${onlineUsers.size}, 用户列表:`, Array.from(onlineUsers.keys()));
       } catch (error) {
-        console.error('Token验证失败:', error);
+        console.error('❌ Token验证失败:', error.message);
         ws.close(1008, 'Invalid token');
         return;
       }
+    } else {
+      console.warn('⚠️ WebSocket连接没有提供token，用户将不会被注册为在线');
     }
     
     ws.on('message', async (data) => {
@@ -68,7 +75,8 @@ const handleWebSocket = (wss) => {
     
     ws.on('close', () => {
       if (userId) {
-        onlineUsers.delete(userId);
+        const userIdStr = String(userId);
+        onlineUsers.delete(userIdStr);
         
         // 更新用户离线状态
         User.update(
@@ -76,7 +84,10 @@ const handleWebSocket = (wss) => {
           { where: { id: userId } }
         );
         
-        console.log(`用户 ${userId} 已离线`);
+        console.log(`👋 用户 ${userIdStr} 已离线`);
+        console.log(`📊 当前在线用户数: ${onlineUsers.size}, 用户列表:`, Array.from(onlineUsers.keys()));
+      } else {
+        console.log('👋 未认证的WebSocket连接已关闭');
       }
     });
     
@@ -120,8 +131,8 @@ const handleChatMessage = async (message, ws, fromUserId) => {
     await updateChatList(to_id, fromUserId, msg_content, type);
     
     // 发送消息给接收方
-    const targetWs = onlineUsers.get(to_id);
-    if (targetWs && targetWs.readyState === Server.OPEN) {
+    const targetWs = onlineUsers.get(String(to_id));
+    if (targetWs && targetWs.readyState === WS.OPEN) {
       targetWs.send(JSON.stringify({
         type: 'message',
         data: {
@@ -166,8 +177,8 @@ const handleTypingMessage = (message, ws, fromUserId) => {
   
   if (!to_id) return;
   
-  const targetWs = onlineUsers.get(to_id);
-  if (targetWs && targetWs.readyState === Server.OPEN) {
+  const targetWs = onlineUsers.get(String(to_id));
+  if (targetWs && targetWs.readyState === WS.OPEN) {
     targetWs.send(JSON.stringify({
       type: 'typing',
       data: {
@@ -289,7 +300,7 @@ const handleAIResponseWS = async (aiUserId, userUserId, userMessage) => {
     await updateChatList(userUserId, aiUserId, aiReply, 'private');
     
     // 通过WebSocket发送AI回复给用户
-    const userWs = onlineUsers.get(userUserId);
+    const userWs = onlineUsers.get(String(userUserId));
     if (userWs && userWs.readyState === 1) { // 1 = OPEN
       userWs.send(JSON.stringify({
         type: 'message',

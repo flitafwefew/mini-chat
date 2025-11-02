@@ -37,6 +37,8 @@ const pc = ref<RTCPeerConnection | null>(null)
 const dataChannel = ref<RTCDataChannel | null>(null)
 const isReady = ref(false)
 const progress = ref(0)
+// ICE候选队列：用于存储远程描述设置前到达的候选
+const pendingCandidates = ref<any[]>([])
 
 // 监听 isSendFile 状态变化
 watch(
@@ -56,11 +58,9 @@ const handleFileMsg = (msg: any) => {
             handleFileAnswerMsg(msg);
             break;
         case 'candidate':
-            if (pc.value?.remoteDescription) {
-                handleNewICECandidateMsg(msg);
-            } else {
-                console.error('远程描述未设置，暂不处理 ICE 候选消息');
-            }
+            console.log('📥 [UserInfo] 处理candidate消息');
+            // 即使远程描述未设置，也会将候选加入队列，等待后续处理
+            handleNewICECandidateMsg(msg);
             break;
         case 'accept':
             isLoading.value = false;
@@ -74,6 +74,9 @@ const handleFileMsg = (msg: any) => {
     }
 };
 const initRTCPeerConnection = () => {
+    // 清空候选队列，开始新的连接
+    pendingCandidates.value = [];
+    
     const iceServer = {
         iceServers: [
             {
@@ -176,32 +179,81 @@ const handleICEConnectionStateChangeEvent = () => {
 const handleFileAnswerMsg = async (data: { desc: any }) => {
     try {
         if (pc.value) {
+            console.log('📥 [UserInfo] 设置远程描述（answer）...');
             const desc = new RTCSessionDescription(data.desc)
             await pc.value.setRemoteDescription(desc)
+            console.log('✅ [UserInfo] 已成功设置远程描述（answer）');
+            
+            // 设置远程描述后，处理之前队列中的ICE候选
+            console.log('📦 [UserInfo] 处理待处理的ICE候选队列...');
+            await processPendingCandidates();
         }
-    } catch (error) {
-        console.error('处理文件响应消息出错:', error)
-        ElMessage('处理文件响应消息出错，请重试')
+    } catch (error: any) {
+        console.error('❌ [UserInfo] 处理文件响应消息出错:', error)
+        ElMessage.error('处理文件响应消息出错，请重试')
     }
 }
 // 处理新的 ICE 候选消息
 const handleNewICECandidateMsg = async (data: { candidate: any }) => {
     try {
-        if (pc.value) {
-            // 检查是否已经设置了远程描述
-            if (pc.value.remoteDescription) { 
-                const candidate = new RTCIceCandidate(data.candidate);
-                await pc.value.addIceCandidate(candidate);
-            } else {
-                console.error('远程描述未设置，无法添加 ICE 候选信息');
-                return; // 避免继续执行
+        if (!pc.value) {
+            console.warn('⚠️ [UserInfo] pc.value 为空，暂存候选');
+            pendingCandidates.value.push(data.candidate);
+            return;
+        }
+        
+        // 检查是否已经设置了远程描述
+        if (pc.value.remoteDescription) { 
+            console.log('✅ [UserInfo] 远程描述已设置，直接添加候选');
+            const candidate = new RTCIceCandidate(data.candidate);
+            await pc.value.addIceCandidate(candidate);
+        } else {
+            // 远程描述未设置，将候选加入队列等待处理
+            console.log('📦 [UserInfo] 远程描述未设置，将候选加入队列');
+            pendingCandidates.value.push(data.candidate);
+        }
+    } catch (error: any) {
+        console.error('❌ [UserInfo] 处理新的 ICE 候选消息出错:', error);
+        console.error('错误详情:', {
+            message: error.message,
+            candidate: data.candidate
+        });
+        ElMessage.error('处理新的 ICE 候选消息出错，请重试');
+    }
+}
+
+// 处理待处理的ICE候选队列
+const processPendingCandidates = async () => {
+    if (!pc.value || !pc.value.remoteDescription) {
+        console.warn('⚠️ [UserInfo] 远程描述未设置，无法处理待处理候选');
+        return;
+    }
+    
+    if (pendingCandidates.value.length === 0) {
+        console.log('✅ [UserInfo] 没有待处理的候选');
+        return;
+    }
+    
+    console.log(`📦 [UserInfo] 开始处理 ${pendingCandidates.value.length} 个待处理的候选`);
+    
+    const candidates = [...pendingCandidates.value];
+    pendingCandidates.value = []; // 清空队列
+    
+    for (const candidateData of candidates) {
+        try {
+            const candidate = new RTCIceCandidate(candidateData);
+            await pc.value.addIceCandidate(candidate);
+            console.log('✅ [UserInfo] 候选已添加');
+        } catch (error: any) {
+            console.error('❌ [UserInfo] 添加候选失败:', error);
+            // 如果候选无效或已过期，继续处理下一个
+            if (error.message && error.message.includes('already have this candidate')) {
+                console.log('ℹ️ [UserInfo] 候选已存在，跳过');
             }
         }
-    } 
-     catch (error) {
-        console.error('处理新的 ICE 候选消息出错:', error)
-        ElMessage('处理新的 ICE 候选消息出错，请重试')
     }
+    
+    console.log(`✅ [UserInfo] 已完成处理所有待处理的候选`);
 }
 const onOffer = async () => {
     isReady.value = true

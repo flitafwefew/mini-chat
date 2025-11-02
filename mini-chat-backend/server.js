@@ -48,114 +48,17 @@ app.use('/api/v1/user-search', require('./routes/userSearch'));
 app.use('/api/v1/call', require('./routes/videoCall'));
 app.use('/api/v1/webrtc', require('./routes/webrtc'));
 
-// 存储用户连接映射
-const userConnections = new Map();
+// 使用统一的WebSocket处理
+const { handleWebSocket, getOnlineUsers } = require('./config/ws');
 
-// 将userConnections传递给videoCallController
+// 将onlineUsers传递给videoCallController（保持向后兼容）
 const videoCallController = require('./controllers/videoCallController');
-videoCallController.setUserConnections(userConnections);
+videoCallController.setUserConnections(getOnlineUsers());
 
-// WebSocket 连接
-wss.on('connection', (ws, req) => {
-  console.log('WebSocket 客户端连接');
-  
-  // 解析 token 参数
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const token = url.searchParams.get('token');
-  
-  if (!token) {
-    ws.close(1008, 'Token required');
-    return;
-  }
-  
-  // 验证 token 并解析用户ID
-  console.log('Token:', token);
-  
-  // 存储用户ID和连接的关系
-  let userId = null;
-  
-  try {
-    // 解析JWT token获取用户ID
-    const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    userId = decoded.userId;
-    ws.userId = userId;
-    userConnections.set(userId, ws);
-    console.log(`用户 ${userId} 已连接`);
-  } catch (error) {
-    console.error('Token验证失败:', error);
-    ws.close(1008, 'Invalid token');
-    return;
-  }
-  
-  ws.on('message', async (data) => {
-    try {
-      const message = JSON.parse(data);
-      console.log('收到消息:', message);
-      
-      // 处理不同类型的消息
-      if (message.type === 'ping') {
-        ws.send(JSON.stringify({ type: 'pong' }));
-        return;
-      }
-      
-      if (message.type === 'auth') {
-        // 用户认证（已在连接时处理，这里可以忽略或用于重新认证）
-        console.log(`用户 ${userId} 重新认证`);
-        return;
-      }
-      
-      if (message.type === 'chat') {
-        // 处理通用聊天消息（私聊和群聊）
-        await handleChatMessage(message, ws);
-        return;
-      }
-      
-      if (message.type === 'private_message') {
-        // 处理私聊消息
-        await handlePrivateMessage(message, ws);
-        return;
-      }
-      
-      if (message.type === 'group_message') {
-        // 处理群聊消息
-        await handleGroupMessage(message, ws);
-        return;
-      }
-      
-      if (message.type === 'video_call') {
-        // 处理视频通话相关消息
-        await handleVideoCallMessage(message, ws);
-        return;
-      }
-      
-      // 默认广播消息给所有连接的客户端
-      wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN && client !== ws) {
-          client.send(data);
-        }
-      });
-    } catch (error) {
-      console.error('WebSocket 消息解析错误:', error);
-    }
-  });
-  
-  ws.on('close', () => {
-    console.log('WebSocket 客户端断开连接');
-    if (userId) {
-      userConnections.delete(userId);
-      console.log(`用户 ${userId} 已断开连接`);
-    }
-  });
-  
-  ws.on('error', (error) => {
-    console.error('WebSocket 错误:', error);
-    if (userId) {
-      userConnections.delete(userId);
-    }
-  });
-});
+// 使用config/ws.js中的WebSocket处理
+handleWebSocket(wss);
 
+/* 以下函数已迁移到 config/ws.js，保留仅作为备份
 // 处理私聊消息
 async function handlePrivateMessage(message, ws) {
   try {
@@ -259,11 +162,12 @@ async function handlePrivateMessage(message, ws) {
     // 发送给发送者确认
     ws.send(JSON.stringify(messageData));
     
-    // 发送给接收者
-    const receiverWs = userConnections.get(to_user_id);
-    if (receiverWs && receiverWs.readyState === WebSocket.OPEN) {
-      receiverWs.send(JSON.stringify(messageData));
-    }
+      // 发送给接收者
+      const onlineUsers = getOnlineUsers();
+      const receiverWs = onlineUsers.get(String(to_user_id));
+      if (receiverWs && receiverWs.readyState === WebSocket.OPEN) {
+        receiverWs.send(JSON.stringify(messageData));
+      }
     
   } catch (error) {
     console.error('处理私聊消息错误:', error);
@@ -360,8 +264,9 @@ async function handleGroupMessage(message, ws) {
     };
     
     // 发送给所有群成员
+    const onlineUsers = getOnlineUsers();
     groupMembers.forEach(member => {
-      const memberWs = userConnections.get(member.user_id);
+      const memberWs = onlineUsers.get(String(member.user_id));
       if (memberWs && memberWs.readyState === WebSocket.OPEN) {
         memberWs.send(JSON.stringify(messageData));
       }
@@ -458,7 +363,8 @@ async function handleChatMessage(message, ws) {
         await updateChatList(member.user_id, groupId, msg_content, 'group', messageId);
         
         // 发送消息给在线的群成员
-        const memberWs = userConnections.get(member.user_id);
+        const onlineUsers = getOnlineUsers();
+        const memberWs = onlineUsers.get(String(member.user_id));
         if (memberWs && memberWs.readyState === WebSocket.OPEN) {
           memberWs.send(JSON.stringify(messageData));
         }
@@ -469,7 +375,8 @@ async function handleChatMessage(message, ws) {
       await updateChatList(to_id, from_id, msg_content, 'private', messageId);
       
       // 发送给接收者
-      const targetWs = userConnections.get(to_id);
+      const onlineUsers = getOnlineUsers();
+      const targetWs = onlineUsers.get(String(to_id));
       if (targetWs && targetWs.readyState === WebSocket.OPEN) {
         targetWs.send(JSON.stringify(messageData));
       }
@@ -558,7 +465,8 @@ async function handleVideoCallMessage(message, ws) {
     };
     
     // 发送给目标用户
-    const targetWs = userConnections.get(targetId);
+    const onlineUsers = getOnlineUsers();
+    const targetWs = onlineUsers.get(String(targetId));
     if (targetWs && targetWs.readyState === WebSocket.OPEN) {
       targetWs.send(JSON.stringify(messageData));
       console.log(`视频通话消息已发送给用户 ${targetId}`);
@@ -578,6 +486,7 @@ async function handleVideoCallMessage(message, ws) {
     }));
   }
 }
+*/
 
 // 添加错误处理中间件（必须在所有路由之后）
 app.use((err, req, res, next) => {

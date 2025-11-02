@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>头像代理测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-item {
+            margin: 10px 0;
+        }
+        .result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        img {
+            max-width: 200px;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>头像加载诊断测试</h1>
+
+    <div class="test-section">
+        <h2>1. 环境信息</h2>
+        <div class="test-item">
+            <strong>当前URL:</strong> <code id="currentUrl"></code>
+        </div>
+        <div class="test-item">
+            <strong>代理配置:</strong>
+            <pre id="proxyConfig"></pre>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 路径测试</h2>
+        <div class="test-item">
+            <label>测试文件名: <input type="text" id="testFilename" value="1f8fa9040a3156c8214e2a4f6b51dc3d.jpeg" style="width: 300px;"></label>
+        </div>
+        <div class="test-item">
+            <strong>测试路径组合:</strong>
+            <ul id="testPaths"></ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. HTTP请求测试</h2>
+        <button onclick="testDirectAccess()">测试直接访问 (localhost:5175)</button>
+        <button onclick="testProxyAccess()">测试代理访问 (通过Vite代理)</button>
+        <button onclick="testBackendDirect()">测试后端直接访问 (localhost:3002)</button>
+        <div id="httpResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 图片加载测试</h2>
+        <button onclick="testImageLoad()">测试图片加载</button>
+        <div id="imageResults"></div>
+        <div id="imageContainer"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. 完整流程测试</h2>
+        <button onclick="runFullTest()">运行完整测试</button>
+        <div id="fullTestResults"></div>
+    </div>
+
+    <script>
+        // 显示环境信息
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('proxyConfig').textContent = JSON.stringify({
+            '/avatars': {
+                target: 'http://10.33.123.133:3002',
+                changeOrigin: true
+            }
+        }, null, 2);
+
+        // 生成测试路径
+        function generateTestPaths() {
+            const filename = document.getElementById('testFilename').value;
+            const paths = [
+                `/avatars/${filename}`,
+                `avatars/${filename}`,
+                `./avatars/${filename}`,
+                `http://localhost:5175/avatars/${filename}`,
+                `http://localhost:3002/avatars/${filename}`,
+                `http://10.33.123.133:3002/avatars/${filename}`
+            ];
+            const ul = document.getElementById('testPaths');
+            ul.innerHTML = paths.map(path => `<li><code>${path}</code></li>`).join('');
+        }
+        generateTestPaths();
+        document.getElementById('testFilename').addEventListener('input', generateTestPaths);
+
+        // 测试函数
+        async function testDirectAccess() {
+            const filename = document.getElementById('testFilename').value;
+            const url = `http://localhost:5175/avatars/${filename}`;
+            testHttpRequest(url, '直接访问 (localhost:5175)');
+        }
+
+        async function testProxyAccess() {
+            const filename = document.getElementById('testFilename').value;
+            const url = `/avatars/${filename}`;
+            testHttpRequest(url, '代理访问 (相对路径)');
+        }
+
+        async function testBackendDirect() {
+            const filename = document.getElementById('testFilename').value;
+            const url = `http://localhost:3002/avatars/${filename}`;
+            testHttpRequest(url, '后端直接访问 (localhost:3002)');
+        }
+
+        async function testHttpRequest(url, testName) {
+            const resultsDiv = document.getElementById('httpResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-item';
+            testDiv.innerHTML = `<strong>${testName}:</strong> <code>${url}</code> - 测试中...`;
+            resultsDiv.appendChild(testDiv);
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(url);
+                const endTime = Date.now();
+                const contentType = response.headers.get('content-type');
+                const contentLength = response.headers.get('content-length');
+                
+                let resultClass = response.ok ? 'success' : 'error';
+                let resultText = `
+                    <strong>${testName}:</strong> <code>${url}</code><br>
+                    状态码: ${response.status} ${response.statusText}<br>
+                    响应时间: ${endTime - startTime}ms<br>
+                    Content-Type: ${contentType || 'N/A'}<br>
+                    Content-Length: ${contentLength || 'N/A'}<br>
+                `;
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultText += `错误信息: ${errorText.substring(0, 200)}<br>`;
+                }
+
+                testDiv.className = `result ${resultClass}`;
+                testDiv.innerHTML = resultText;
+            } catch (error) {
+                testDiv.className = 'result error';
+                testDiv.innerHTML = `
+                    <strong>${testName}:</strong> <code>${url}</code><br>
+                    <strong>错误:</strong> ${error.message}
+                `;
+            }
+        }
+
+        function testImageLoad() {
+            const filename = document.getElementById('testFilename').value;
+            const imageContainer = document.getElementById('imageContainer');
+            const resultsDiv = document.getElementById('imageResults');
+            
+            const testPaths = [
+                { name: '相对路径', url: `/avatars/${filename}` },
+                { name: '绝对路径（前端）', url: `http://localhost:5175/avatars/${filename}` },
+                { name: '后端直接', url: `http://localhost:3002/avatars/${filename}` }
+            ];
+
+            imageContainer.innerHTML = '';
+            resultsDiv.innerHTML = '';
+
+            testPaths.forEach(({ name, url }) => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = name;
+                
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'test-item';
+                resultDiv.innerHTML = `<strong>${name}:</strong> <code>${url}</code>`;
+                
+                img.onload = () => {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<strong>${name}:</strong> <code>${url}</code> ✓ 加载成功`;
+                    imageContainer.appendChild(img);
+                };
+                
+                img.onerror = (e) => {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>${name}:</strong> <code>${url}</code> ✗ 加载失败`;
+                };
+                
+                resultsDiv.appendChild(resultDiv);
+            });
+        }
+
+        async function runFullTest() {
+            const resultsDiv = document.getElementById('fullTestResults');
+            resultsDiv.innerHTML = '<div class="info">运行完整测试中...</div>';
+            
+            const filename = document.getElementById('testFilename').value;
+            const tests = [
+                { name: '代理访问', url: `/avatars/${filename}` },
+                { name: '直接访问前端', url: `http://localhost:5175/avatars/${filename}` },
+                { name: '直接访问后端', url: `http://localhost:3002/avatars/${filename}` }
+            ];
+
+            let results = '<h3>测试结果:</h3>';
+            
+            for (const test of tests) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(test.url);
+                    const endTime = Date.now();
+                    
+                    if (response.ok) {
+                        results += `<div class="result success">✓ ${test.name}: ${response.status} (${endTime - startTime}ms)</div>`;
+                    } else {
+                        const errorText = await response.text();
+                        results += `<div class="result error">✗ ${test.name}: ${response.status} - ${errorText.substring(0, 100)}</div>`;
+                    }
+                } catch (error) {
+                    results += `<div class="result error">✗ ${test.name}: ${error.message}</div>`;
+                }
+            }
+            
+            resultsDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>
+
