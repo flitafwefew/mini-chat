@@ -1,5 +1,7 @@
 const { User, Friend, ChatGroup, UserChatGroup } = require('../models/associations');
 const { Op } = require('sequelize');
+const { sendSuccess, sendError } = require('../utils/response');
+const sequelize = require('../config/db');
 
 // 发送好友申请
 const sendFriendRequest = async (req, res) => {
@@ -10,14 +12,16 @@ const sendFriendRequest = async (req, res) => {
     if (!friendId) {
       return res.status(400).json({
         code: 400,
-        message: '好友ID不能为空'
+        message: '好友ID不能为空',
+        data: []
       });
     }
 
     if (userId === friendId) {
       return res.status(400).json({
         code: 400,
-        message: '不能添加自己为好友'
+        message: '不能添加自己为好友',
+        data: []
       });
     }
 
@@ -26,7 +30,8 @@ const sendFriendRequest = async (req, res) => {
     if (!friend) {
       return res.status(404).json({
         code: 404,
-        message: '用户不存在'
+        message: '用户不存在',
+        data: []
       });
     }
 
@@ -43,7 +48,8 @@ const sendFriendRequest = async (req, res) => {
     if (existingFriend) {
       return res.status(400).json({
         code: 400,
-        message: '已经是好友关系'
+        message: '已经是好友关系',
+        data: []
       });
     }
 
@@ -59,7 +65,8 @@ const sendFriendRequest = async (req, res) => {
     if (existingRequest) {
       return res.status(400).json({
         code: 400,
-        message: '已经发送过好友申请'
+        message: '已经发送过好友申请',
+        data: []
       });
     }
 
@@ -88,6 +95,7 @@ const sendFriendRequest = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '发送好友申请失败',
+      data: [],
       error: error.message
     });
   }
@@ -102,7 +110,8 @@ const acceptFriendRequest = async (req, res) => {
     if (!friendId) {
       return res.status(400).json({
         code: 400,
-        message: '好友ID不能为空'
+        message: '好友ID不能为空',
+        data: []
       });
     }
 
@@ -118,7 +127,8 @@ const acceptFriendRequest = async (req, res) => {
     if (!friendRequest) {
       return res.status(404).json({
         code: 404,
-        message: '未找到待处理的好友申请'
+        message: '未找到待处理的好友申请',
+        data: []
       });
     }
 
@@ -155,6 +165,7 @@ const acceptFriendRequest = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '接受好友申请失败',
+      data: [],
       error: error.message
     });
   }
@@ -169,7 +180,8 @@ const rejectFriendRequest = async (req, res) => {
     if (!friendId) {
       return res.status(400).json({
         code: 400,
-        message: '好友ID不能为空'
+        message: '好友ID不能为空',
+        data: []
       });
     }
 
@@ -185,7 +197,8 @@ const rejectFriendRequest = async (req, res) => {
     if (!friendRequest) {
       return res.status(404).json({
         code: 404,
-        message: '未找到待处理的好友申请'
+        message: '未找到待处理的好友申请',
+        data: []
       });
     }
 
@@ -194,13 +207,15 @@ const rejectFriendRequest = async (req, res) => {
 
     res.json({
       code: 200,
-      message: '拒绝好友申请成功'
+      message: '拒绝好友申请成功',
+      data: []
     });
   } catch (error) {
     console.error('拒绝好友申请失败:', error);
     res.status(500).json({
       code: 500,
       message: '拒绝好友申请失败',
+      data: [],
       error: error.message
     });
   }
@@ -210,32 +225,98 @@ const rejectFriendRequest = async (req, res) => {
 const getFriendRequests = async (req, res) => {
   try {
     const { userId } = req.user;
+    console.log('=== 获取好友申请列表开始 ===');
+    console.log('userId:', userId);
 
+    if (!userId) {
+      return res.status(400).json({
+        code: 400,
+        message: '用户ID不能为空',
+        data: []
+      });
+    }
+
+    // 先检查 User 和 Friend 模型是否正确加载
+    if (!User || !Friend) {
+      console.error('模型未正确加载:', { User: !!User, Friend: !!Friend });
+      throw new Error('数据库模型未正确加载');
+    }
+
+    console.log('开始查询好友申请，条件:', { friend_id: userId, status: 'pending' });
+    const startTime = Date.now();
+
+    // 先查询好友申请记录
     const requests = await Friend.findAll({
       where: {
         friend_id: userId,
         status: 'pending'
       },
-      include: [{
-        model: User,
-        as: 'user',
-        attributes: ['id', 'account', 'name', 'portrait', 'sex', 'signature']
-      }],
-      order: [['create_time', 'DESC']]
+      order: [['create_time', 'DESC']],
+      limit: 50,
+      raw: false // 确保返回 Sequelize 实例，以便使用关联
     });
 
-    const requestList = requests.map(request => ({
-      id: request.id,
-      userId: request.user.id,
-      account: request.user.account,
-      name: request.user.name,
-      portrait: request.user.portrait,
-      avatar: request.user.portrait, // 统一使用avatar字段
-      sex: request.user.sex,
-      signature: request.user.signature,
-      message: request.remark,
-      createTime: request.create_time
-    }));
+    const queryTime = Date.now() - startTime;
+    console.log(`查询好友申请耗时: ${queryTime}ms`);
+    console.log('查询到的好友申请数量:', requests.length);
+
+    if (requests.length === 0) {
+      console.log('没有待处理的好友申请');
+      return res.json({
+        code: 200,
+        message: '获取好友申请列表成功',
+        data: []
+      });
+    }
+
+    // 获取所有申请发送者的 user_id
+    const senderIds = [...new Set(requests.map(r => r.user_id))];
+    console.log('申请发送者IDs:', senderIds);
+
+    // 批量查询用户信息
+    const users = await User.findAll({
+      where: {
+        id: {
+          [Op.in]: senderIds
+        }
+      },
+      attributes: ['id', 'account', 'name', 'portrait', 'sex', 'signature'],
+      raw: true
+    });
+
+    console.log('查询到用户数量:', users.length);
+    
+    // 创建用户ID到用户信息的映射
+    const userMap = {};
+    users.forEach(user => {
+      userMap[user.id] = user;
+    });
+
+    // 组装返回数据
+    const requestList = requests
+      .map(request => {
+        const sender = userMap[request.user_id];
+        if (!sender) {
+          console.warn('申请发送者不存在:', request.user_id);
+          return null;
+        }
+        return {
+          id: request.id,
+          userId: sender.id,
+          account: sender.account || '',
+          name: sender.name || '',
+          portrait: sender.portrait || '',
+          avatar: sender.portrait || '', // 统一使用avatar字段
+          sex: sender.sex || '',
+          signature: sender.signature || '',
+          message: request.remark || '',
+          createTime: request.create_time
+        };
+      })
+      .filter(item => item !== null); // 过滤掉 null 值
+
+    console.log('处理后的申请列表数量:', requestList.length);
+    console.log('=== 获取好友申请列表完成 ===');
 
     res.json({
       code: 200,
@@ -243,11 +324,26 @@ const getFriendRequests = async (req, res) => {
       data: requestList
     });
   } catch (error) {
-    console.error('获取好友申请列表失败:', error);
+    console.error('=== 获取好友申请列表失败 ===');
+    console.error('错误名称:', error.name);
+    console.error('错误消息:', error.message);
+    console.error('错误堆栈:', error.stack);
+    
+    // 如果是 Sequelize 错误，输出更多信息
+    if (error.name === 'SequelizeDatabaseError' || error.name === 'SequelizeValidationError') {
+      console.error('Sequelize 错误详情:', {
+        name: error.name,
+        message: error.message,
+        original: error.original
+      });
+    }
+
     res.status(500).json({
       code: 500,
       message: '获取好友申请列表失败',
-      error: error.message
+      data: [],
+      error: process.env.NODE_ENV === 'development' ? error.message : '服务器内部错误',
+      errorName: error.name
     });
   }
 };
@@ -261,14 +357,16 @@ const addFriend = async (req, res) => {
     if (!friendId) {
       return res.status(400).json({
         code: 400,
-        message: '好友ID不能为空'
+        message: '好友ID不能为空',
+        data: []
       });
     }
 
     if (userId === friendId) {
       return res.status(400).json({
         code: 400,
-        message: '不能添加自己为好友'
+        message: '不能添加自己为好友',
+        data: []
       });
     }
 
@@ -277,7 +375,8 @@ const addFriend = async (req, res) => {
     if (!friend) {
       return res.status(404).json({
         code: 404,
-        message: '用户不存在'
+        message: '用户不存在',
+        data: []
       });
     }
 
@@ -294,7 +393,8 @@ const addFriend = async (req, res) => {
     if (existingFriend) {
       return res.status(400).json({
         code: 400,
-        message: '已经是好友关系'
+        message: '已经是好友关系',
+        data: []
       });
     }
 
@@ -332,6 +432,7 @@ const addFriend = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '添加好友失败',
+      data: [],
       error: error.message
     });
   }
@@ -346,7 +447,8 @@ const deleteFriend = async (req, res) => {
     if (!friendId) {
       return res.status(400).json({
         code: 400,
-        message: '好友ID不能为空'
+        message: '好友ID不能为空',
+        data: []
       });
     }
 
@@ -362,13 +464,15 @@ const deleteFriend = async (req, res) => {
 
     res.json({
       code: 200,
-      message: '删除好友成功'
+      message: '删除好友成功',
+      data: []
     });
   } catch (error) {
     console.error('删除好友失败:', error);
     res.status(500).json({
       code: 500,
       message: '删除好友失败',
+      data: [],
       error: error.message
     });
   }
@@ -412,6 +516,7 @@ const getFriendList = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '获取好友列表失败',
+      data: [],
       error: error.message
     });
   }
@@ -419,56 +524,206 @@ const getFriendList = async (req, res) => {
 
 // 搜索用户（用于添加好友）
 const searchUsers = async (req, res) => {
-  try {
-    const { userId } = req.user;
-    const { keyword } = req.query;
+  // 确保响应函数，防止重复发送
+  let responseSent = false;
+  const sendResponse = (code, message, data = []) => {
+    if (responseSent || res.headersSent) {
+      return;
+    }
+    responseSent = true;
+    try {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(code).json({ code, message, data });
+    } catch (err) {
+      console.error('发送响应失败:', err);
+      if (!res.finished) {
+        try {
+          res.status(code).end(JSON.stringify({ code, message, data }));
+        } catch (e) {
+          res.end();
+        }
+      }
+    }
+  };
 
-    if (!keyword) {
-      return res.status(400).json({
-        code: 400,
-        message: '搜索关键词不能为空'
-      });
+  try {
+    console.log('=== 搜索用户开始 ===');
+    console.log('req.user:', req.user ? '存在' : '不存在');
+    console.log('req.query:', req.query);
+
+    // 验证 req.user 是否存在
+    if (!req.user) {
+      console.error('req.user 不存在');
+      return sendResponse(401, '用户未认证或认证信息无效', []);
     }
 
-    // 搜索用户（排除自己和已经是好友的用户）
-    const friendIds = await Friend.findAll({
-      where: { user_id: userId },
-      attributes: ['friend_id']
-    });
-    const friendIdList = friendIds.map(f => f.friend_id);
+    // 尝试多种方式获取 userId
+    const userId = req.user.userId || req.user.user_id || req.user.id;
 
-    const users = await User.findAll({
-      where: {
-        id: { [Op.ne]: userId },
-        id: { [Op.notIn]: friendIdList },
-        [Op.or]: [
-          { name: { [Op.like]: `%${keyword}%` } },
-          { account: { [Op.like]: `%${keyword}%` } }
-        ],
-        status: 'active'
-      },
-      attributes: ['id', 'account', 'name', 'portrait', 'sex', 'signature', 'is_online'],
-      limit: 20
-    });
+    // 验证 userId
+    if (!userId) {
+      console.error('userId 不存在');
+      return sendResponse(401, '用户未认证或认证信息无效', []);
+    }
 
-    // 统一字段名，将portrait映射为avatar
-    const formattedUsers = users.map(user => ({
-      ...user.toJSON(),
-      avatar: user.portrait
-    }));
+    const { keyword } = req.query;
 
-    res.json({
-      code: 200,
-      message: '搜索用户成功',
-      data: formattedUsers
-    });
+    // 验证 keyword
+    if (!keyword || typeof keyword !== 'string' || keyword.trim() === '') {
+      return sendResponse(400, '搜索关键词不能为空', []);
+    }
+
+    // 检查模型是否正确加载
+    if (!User || !Friend) {
+      console.error('模型未正确加载:', { User: !!User, Friend: !!Friend });
+      return sendResponse(500, '服务器配置错误', []);
+    }
+
+    // 检查数据库连接状态
+    try {
+      await sequelize.authenticate();
+      console.log('数据库连接正常');
+    } catch (dbConnError) {
+      console.error('数据库连接失败:', dbConnError.message);
+      console.error('连接错误详情:', {
+        name: dbConnError.name,
+        code: dbConnError.original?.code,
+        sqlState: dbConnError.original?.sqlState
+      });
+      return sendResponse(500, `数据库连接失败: ${dbConnError.message || '无法连接到数据库'}`, []);
+    }
+
+    const trimmedKeyword = keyword.trim();
+    console.log('搜索关键词:', trimmedKeyword, 'userId:', userId);
+    
+    // 执行数据库查询
+    let friendIds = [];
+    let users = [];
+    
+    try {
+      // 先测试一下能否查询到所有用户（用于调试）
+      const allUsersCount = await User.count();
+      console.log('数据库中总用户数:', allUsersCount);
+      
+      // 测试精确匹配查询
+      const exactMatch = await User.findOne({
+        where: {
+          [Op.or]: [
+            { account: trimmedKeyword },
+            { name: trimmedKeyword }
+          ]
+        },
+        attributes: ['id', 'account', 'name']
+      });
+      console.log('精确匹配结果:', exactMatch ? { id: exactMatch.id, account: exactMatch.account, name: exactMatch.name } : '未找到');
+      
+      // 并行查询好友列表和用户列表
+      const [friendResults, userResults] = await Promise.allSettled([
+        Friend.findAll({
+          where: { user_id: userId },
+          attributes: ['friend_id'],
+          raw: true
+        }),
+        User.findAll({
+          where: {
+            id: { [Op.ne]: userId },
+            [Op.or]: [
+              sequelize.where(
+                sequelize.fn('LOWER', sequelize.col('name')),
+                'LIKE',
+                `%${trimmedKeyword.toLowerCase()}%`
+              ),
+              sequelize.where(
+                sequelize.fn('LOWER', sequelize.col('account')),
+                'LIKE',
+                `%${trimmedKeyword.toLowerCase()}%`
+              )
+            ]
+          },
+          attributes: ['id', 'account', 'name', 'portrait', 'sex', 'signature', 'is_online'],
+          limit: 20,
+          raw: false
+        })
+      ]);
+
+      // 处理好友查询结果
+      if (friendResults.status === 'fulfilled') {
+        friendIds = friendResults.value || [];
+      } else {
+        console.error('好友查询失败:', friendResults.reason);
+        friendIds = [];
+      }
+
+      // 处理用户查询结果
+      if (userResults.status === 'fulfilled') {
+        users = userResults.value || [];
+        console.log(`用户查询成功，找到 ${users.length} 个用户`);
+        if (users.length > 0) {
+          console.log('找到的用户列表:');
+          users.forEach((user, index) => {
+            const userData = user.get ? user.get({ plain: true }) : (user.toJSON ? user.toJSON() : user);
+            console.log(`  ${index + 1}. ID: ${userData.id}, Account: ${userData.account}, Name: ${userData.name}`);
+          });
+        } else {
+          console.log('未找到匹配的用户，尝试查看所有用户...');
+          // 调试：查看前5个用户
+          const sampleUsers = await User.findAll({
+            attributes: ['id', 'account', 'name'],
+            limit: 5,
+            raw: true
+          });
+          console.log('数据库中的示例用户:', sampleUsers);
+        }
+      } else {
+        console.error('用户查询失败:', userResults.reason);
+        console.error('错误堆栈:', userResults.reason?.stack);
+        return sendResponse(500, `搜索失败: ${userResults.reason?.message || '数据库查询错误'}`, []);
+      }
+    } catch (dbError) {
+      console.error('数据库查询异常:', dbError);
+      console.error('错误堆栈:', dbError.stack);
+      return sendResponse(500, `数据库查询失败: ${dbError.message || '未知错误'}`, []);
+    }
+
+    console.log(`找到 ${friendIds.length} 个好友，${users.length} 个用户`);
+
+    // 构建好友ID集合
+    const friendIdSet = new Set(friendIds.map(f => f.friend_id));
+
+    // 格式化用户数据
+    const formattedUsers = [];
+    for (const user of users) {
+      try {
+        const userData = user.get ? user.get({ plain: true }) : (user.toJSON ? user.toJSON() : user);
+        formattedUsers.push({
+          id: userData.id || '',
+          account: userData.account || '',
+          name: userData.name || '',
+          portrait: userData.portrait || '',
+          avatar: userData.portrait || userData.avatar || '',
+          sex: userData.sex || '',
+          signature: userData.signature || '',
+          is_online: userData.is_online || false,
+          isFriend: friendIdSet.has(userData.id)
+        });
+      } catch (mapError) {
+        console.error('映射用户数据错误:', mapError);
+        // 跳过这个用户，继续处理下一个
+      }
+    }
+
+    console.log('=== 搜索用户结束，返回', formattedUsers.length, '个用户 ===');
+    
+    // 发送成功响应
+    return sendResponse(200, '搜索用户成功', formattedUsers);
+    
   } catch (error) {
-    console.error('搜索用户失败:', error);
-    res.status(500).json({
-      code: 500,
-      message: '搜索用户失败',
-      error: error.message
-    });
+    console.error('=== 搜索用户异常 ===');
+    console.error('错误:', error.name, error.message);
+    console.error('堆栈:', error.stack);
+    
+    // 确保发送错误响应
+    return sendResponse(500, `搜索用户失败: ${error.message || '未知错误'}`, []);
   }
 };
 
@@ -497,6 +752,7 @@ const checkIsFriend = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '检查好友关系失败',
+      data: [],
       error: error.message
     });
   }
@@ -551,6 +807,7 @@ const getFriendsForSidebar = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '获取好友列表失败',
+      data: [],
       error: error.message
     });
   }
@@ -565,7 +822,8 @@ const addGroupMembersAsFriends = async (req, res) => {
     if (!groupId) {
       return res.status(400).json({
         code: 400,
-        message: '群组ID不能为空'
+        message: '群组ID不能为空',
+        data: []
       });
     }
 
@@ -574,7 +832,8 @@ const addGroupMembersAsFriends = async (req, res) => {
     if (!group) {
       return res.status(404).json({
         code: 404,
-        message: '群组不存在'
+        message: '群组不存在',
+        data: []
       });
     }
 
@@ -589,7 +848,8 @@ const addGroupMembersAsFriends = async (req, res) => {
     if (!userInGroup) {
       return res.status(403).json({
         code: 403,
-        message: '您不是该群组的成员'
+        message: '您不是该群组的成员',
+        data: []
       });
     }
 
@@ -606,7 +866,8 @@ const addGroupMembersAsFriends = async (req, res) => {
     if (groupMembers.length <= 1) {
       return res.status(400).json({
         code: 400,
-        message: '群组成员不足，无法添加好友'
+        message: '群组成员不足，无法添加好友',
+        data: []
       });
     }
 
@@ -692,7 +953,7 @@ const addGroupMembersAsFriends = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '服务器错误',
-      data: null
+      data: []
     });
   }
 };

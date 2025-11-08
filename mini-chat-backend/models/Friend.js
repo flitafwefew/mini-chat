@@ -3,7 +3,7 @@ const sequelize = require('../config/db');
 
 const Friend = sequelize.define('Friend', {
   id: {
-    type: DataTypes.STRING(64),
+    type: DataTypes.STRING(128),
     primaryKey: true,
     allowNull: false
   },

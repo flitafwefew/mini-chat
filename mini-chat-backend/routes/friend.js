@@ -2,6 +2,19 @@ const express = require('express');
 const router = express.Router();
 const friendController = require('../controllers/friendController');
 const authMiddleware = require('../middleware/auth');
+const asyncHandler = require('../utils/asyncHandler');
+
+// 请求日志中间件（用于调试）
+router.use((req, res, next) => {
+  console.log(`[好友路由] ${req.method} ${req.path}`, {
+    query: req.query,
+    body: req.body,
+    headers: {
+      'x-token': req.headers['x-token'] ? '已提供' : '未提供'
+    }
+  });
+  next();
+});
 
 // 所有路由都需要身份验证
 router.use(authMiddleware);

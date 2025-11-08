@@ -509,7 +509,11 @@ const getGroupMembers = async (req, res) => {
 
     const userIds = userGroups.map(ug => ug.user_id);
     const members = await User.findAll({
-      where: { id: userIds },
+      where: { 
+        id: {
+          [Op.in]: userIds
+        }
+      },
       attributes: ['id', 'account', 'name', 'portrait']
     });
 
@@ -527,6 +531,12 @@ const getGroupMembers = async (req, res) => {
     });
   } catch (error) {
     console.error('获取群成员错误:', error);
+    console.error('错误详情:', {
+      message: error.message,
+      stack: error.stack,
+      groupId: req.params.groupId,
+      userId: req.user?.userId
+    });
     res.status(500).json({
       code: 500,
       msg: '服务器错误',

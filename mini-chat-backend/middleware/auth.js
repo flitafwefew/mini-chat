@@ -7,8 +7,8 @@ const auth = (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         code: 401,
-        msg: '未提供认证令牌',
-        data: null
+        message: '未提供认证令牌',
+        data: []
       });
     }
 
@@ -19,15 +19,15 @@ const auth = (req, res, next) => {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         code: 401,
-        msg: '认证令牌已过期',
-        data: null
+        message: '认证令牌已过期',
+        data: []
       });
     }
     
     return res.status(401).json({
       code: 401,
-      msg: '无效的认证令牌',
-      data: null
+      message: '无效的认证令牌',
+      data: []
     });
   }
 };

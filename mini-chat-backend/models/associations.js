@@ -40,15 +40,19 @@ ChatList.belongsTo(User, {
 });
 
 // ChatList 和 User 的关联（用于私聊）
+// 注意：不创建外键约束，因为 from_id 既可以是用户ID（私聊），也可以是群组ID（群聊）
 ChatList.belongsTo(User, { 
   foreignKey: 'from_id', 
-  as: 'fromUser' 
+  as: 'fromUser',
+  constraints: false  // 不创建外键约束
 });
 
 // ChatList 和 ChatGroup 的关联（用于群聊）
+// 注意：不创建外键约束，因为 from_id 既可以是用户ID（私聊），也可以是群组ID（群聊）
 ChatList.belongsTo(ChatGroup, { 
   foreignKey: 'from_id', 
-  as: 'groupInfo' 
+  as: 'groupInfo',
+  constraints: false  // 不创建外键约束
 });
 
 // User 和 Friend 的关联
