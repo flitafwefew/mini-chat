@@ -44,7 +44,7 @@ app.use(express.static('public'));
 
 // 路由
 app.use('/api/v1/user', require('./routes/user'));
-app.use('/api/v1/message', require('./routes/message'));
+app.use('/v1/message', require('./routes/message'));
 app.use('/api/v1/chat-list', require('./routes/chatList'));
 app.use('/api/v1/chat-group', require('./routes/chatGroup'));
 app.use('/api/v1/file', require('./routes/fileRoutes'));

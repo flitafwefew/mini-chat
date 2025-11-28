@@ -20,7 +20,7 @@ function isMobileDevice() {
 // 获取服务URL的函数
 function getServiceUrl() {
   const isMobile = isMobileDevice();
-  return import.meta.env.VITE_API_BASE_URL || (isMobile ? 'http://10.34.39.65:3002' : (import.meta.env.DEV ? '/api' : 'http://10.34.39.65:3002'));
+  return import.meta.env.VITE_API_BASE_URL || (isMobile ? 'http://192.168.185.224:3002' : (import.meta.env.DEV ? '/api' : 'http://192.168.185.224:3002'));
 }
 
 // 创建axios实例

@@ -12,7 +12,11 @@
                 <!-- 消息内容 -->
                 <div v-if="message.type === 'text' || message.type === 'emoji' || message.type === 'call'" class="message-content" :class="{ 'message-self': isSelf(message.fromId) }">
                     <div class="message-avatar" >
-                        <img v-if="userStore.userMap[message.fromId]?.avatar" :src="userStore.userMap[message.fromId]?.avatar || ''" alt="avatar" class="avatar">
+                        <img v-if="userStore.userMap[message.fromId]?.avatar && !avatarLoadFailed[message.id]" 
+                             :src="userStore.userMap[message.fromId]?.avatar || ''" 
+                             alt="avatar" 
+                             class="avatar"
+                             @error="handleAvatarError(message.id)">
                         <Avatar v-else :name="message.fromInfo.name" :size="40" />
                     </div>
                     <div class="message-body" @contextmenu.prevent="showContextMenu($event, message)">
@@ -63,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch, onBeforeUnmount } from 'vue'
+import { ref, onMounted, nextTick, watch, onBeforeUnmount, reactive } from 'vue'
 import { record } from '@/api/message'
 import type { RecordParams, MessageRecord } from '@/types/message'
 import { ElMessage } from 'element-plus'
@@ -83,6 +87,14 @@ const messageStore = useMessageStore()
 const currentPage = ref(0)
 const isLoadingMore = ref(false)
 const hasMore = ref(true)
+
+// 跟踪头像加载失败的状态
+const avatarLoadFailed = reactive<Record<string, boolean>>({})
+
+// 处理头像加载错误
+const handleAvatarError = (messageId: string) => {
+    avatarLoadFailed[messageId] = true
+}
 
 // 判断是否是自己发送的消息
 const isSelf = (fromId: string) => {

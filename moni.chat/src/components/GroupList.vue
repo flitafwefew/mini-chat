@@ -15,7 +15,10 @@
             <div v-else-if="groupMembers.length === 0" class="no-members">暂无群成员</div>
             <div v-else class="group-list-item" v-for="(member, index) in groupMembers" :key="index">
                 <div class="group-list-item-avatar">
-                    <img v-if="userStore.userMap[member.id]?.avatar" :src="userStore.userMap[member.id]?.avatar || ''" alt="">
+                    <img v-if="userStore.userMap[member.id]?.avatar && !avatarLoadFailed[member.id]" 
+                         :src="userStore.userMap[member.id]?.avatar || ''" 
+                         alt=""
+                         @error="handleAvatarError(member.id)">
                     <Avatar v-else :name="member.name" :size="31" />
                     <!-- 在线状态小绿原点 -->
                     <div v-if="isMemberOnline(member.id)" class="online-dot"></div>
@@ -44,6 +47,14 @@ const messageStore = useMessageStore()
 const groupMembers = ref<any[]>([])
 const loading = ref(false)
 const onlineUserIds = ref<string[]>([])
+
+// 跟踪头像加载失败的状态
+const avatarLoadFailed = ref<Record<string, boolean>>({})
+
+// 处理头像加载错误
+const handleAvatarError = (memberId: string) => {
+    avatarLoadFailed.value[memberId] = true
+}
 
 // 检查群成员是否在线
 const isMemberOnline = (memberId: string) => {

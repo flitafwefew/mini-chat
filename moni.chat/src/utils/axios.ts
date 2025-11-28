@@ -23,10 +23,27 @@ function isMobileDevice() {
   return isMobile;
 }
 
-// 获取服务URL的函数
+// 根据运行环境解析后端地址
 function getServiceUrl() {
+  // 1. 优先使用 .env 中显式配置
+  if (import.meta.env.VITE_HTTP_URL) {
+    return import.meta.env.VITE_HTTP_URL;
+  }
+
+  const hostname = window.location.hostname || 'localhost';
+  const protocol = window.location.protocol || 'http:';
   const isMobile = isMobileDevice();
-  return import.meta.env.VITE_HTTP_URL || (isMobile ? 'http://10.34.39.65:3002' : (import.meta.env.DEV ? '/api' : 'http://10.34.39.65:3002'));
+
+  // 2. 本地开发：桌面端继续走 Vite 代理（/api），移动端直连 3002
+  if (import.meta.env.DEV) {
+    return isMobile
+      ? `${protocol}//${hostname}:3002`
+      : '/api';
+  }
+
+  // 3. 生产环境默认使用当前页面的 origin
+  const port = window.location.port ? `:${window.location.port}` : '';
+  return `${protocol}//${hostname}${port}`;
 }
 
 const SERVICE_URL = getServiceUrl();

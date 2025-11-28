@@ -164,8 +164,8 @@ function connect(tokenStr: string) {
   try {
     // 根据环境选择WebSocket地址
     const wsIp = import.meta.env.DEV 
-      ? 'ws://10.34.39.65:3002/ws'     // 开发环境直接连接后端
-      : 'ws://10.34.39.65:3002/ws'     // 生产环境直接连接后端
+      ? 'ws://localhost:3002/ws'     // 开发环境直接连接后端
+      : 'ws://localhost:3002/ws'     // 生产环境直接连接后端
     ws = new WebSocket(wsIp + '?token=' + token)
     ws.onopen = () => {
       console.log('✅ WebSocket连接成功')

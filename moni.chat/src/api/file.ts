@@ -18,7 +18,7 @@ const isMobileDevice = () => {
 
 // 获取服务URL
 const getServiceUrl = () => {
-    return isMobileDevice() ? 'http://10.34.39.65:3002' : 'http://10.34.39.65:3002';
+    return isMobileDevice() ? 'http://10.33.100.78:3002' : 'http://10.33.100.78:3002';
 };
 
 // 移动端直接fetch请求

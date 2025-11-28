@@ -7,10 +7,14 @@
                 </div>
             </div>
             <div class="header-center">
-                <div class="header-center-avatar" @click="toggleChatList($event)">
-                    <img v-if="userStore.user?.avatar" :src="userStore.user?.avatar" class="avatar" alt="">
-                    <Avatar v-else :name="userStore.user?.name || ''" :size="40" />
-                </div>
+                  <div class="header-center-avatar" @click="toggleChatList($event)">
+                     <img v-if="userStore.user?.avatar && !avatarLoadFailed" 
+                          :src="userStore.user?.avatar" 
+                          class="avatar" 
+                          alt=""
+                          @error="handleAvatarError">
+                     <Avatar v-else :name="userStore.user?.name || ''" :size="40" />
+                  </div>
                 <div class="header-center-title">
                     <ChatName />
                 </div>
@@ -25,7 +29,7 @@
                 </div>
             </div>
             <div class="header-right">
-                <UserItem />
+                <UserItem @toggle-add-friend="toggleAddFriendPanel" />
             </div>
         </div>
         <div class="main">
@@ -41,7 +45,14 @@
                 <Message></Message>
             </div>
             <div class="main-right">
-                <GroupList></GroupList>
+                <GroupList class="group-panel"></GroupList>
+                <div class="aside-divider"></div>
+                <transition name="fade-slide">
+                    <div v-if="showAddFriendPanel" class="add-friend-overlay">
+                        <button class="overlay-close" @click="closeAddFriendPanel">×</button>
+                        <AddFriend class="add-friend-panel" />
+                    </div>
+                </transition>
             </div>
         </div>
 
@@ -61,13 +72,29 @@ import Message from '@/components/Message.vue'
 import ChatName from '@/components/ChatName.vue'
 import UserItem from '@/components/UserItem.vue'
 import GroupList from '@/components/GroupList.vue'
+import AddFriend from '@/components/AddFriend.vue'
 import Avatar from '@/components/Avatar.vue'
 import { useSwipe } from '@vueuse/core'
 
 const userStore = useUserStore()
 const showChatList = ref(false)
 const showGroupList = ref(false)
+const showAddFriendPanel = ref(false)
+const toggleAddFriendPanel = () => {
+    showAddFriendPanel.value = !showAddFriendPanel.value
+}
+
+const closeAddFriendPanel = () => {
+    showAddFriendPanel.value = false
+}
+
 const mainCenterRef = ref(null)
+const avatarLoadFailed = ref(false)
+
+// 处理头像加载错误
+const handleAvatarError = () => {
+    avatarLoadFailed.value = true
+}
 
 const toggleChatList = (event: MouseEvent) => {
     event.stopPropagation(); // 阻止事件冒泡
@@ -310,6 +337,54 @@ $column-layout: 1fr 3fr 1fr;
         border-radius: 5px;
         grid-area: right;
         background: #EDF5FE;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        overflow-y: auto;
+
+        .group-panel {
+            flex: 0 0 auto;
+        }
+
+        .aside-divider {
+            height: 1px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .add-friend-panel {
+            flex: 1 1 auto;
+        }
+
+        .add-friend-overlay {
+            position: absolute;
+            inset: 0;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+            padding: 12px 12px 12px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .overlay-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s;
+
+            &:hover {
+                color: #000;
+            }
+        }
     }
 }
 
@@ -373,5 +448,16 @@ $column-layout: 1fr 3fr 1fr;
             height: 100vh;
         }
     }
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+    opacity: 0;
+    transform: translateY(10px);
 }
 </style>

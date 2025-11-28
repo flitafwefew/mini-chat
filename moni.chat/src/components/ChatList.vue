@@ -6,7 +6,11 @@
             <div v-for="chat in chatListStore.groupChats" :key="chat.id" class="chat-item"
                 :class="{ active: messageStore.targetId === chat.targetId }" @click="handleChatClick(chat)">
                 <div class="chat-avatar">
-                    <img v-if="getUserAvatar(chat.targetId)" :src="getUserAvatar(chat.targetId)" class="avatar" alt="">
+                    <img v-if="getUserAvatar(chat.targetId) && !avatarLoadFailed[chat.targetId]" 
+                         :src="getUserAvatar(chat.targetId) || undefined" 
+                         class="avatar" 
+                         alt=""
+                         @error="handleAvatarError(chat.targetId)">
                     <Avatar v-else :name="chat.targetInfo.name" :size="40" />
                     <div v-if="chat.unreadCount > 0" class="unread-badge">
                         {{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}
@@ -33,7 +37,10 @@
             <div v-for="chat in chatListStore.privateChats" :key="chat.id" class="chat-item"
                 :class="{ active: messageStore.targetId === chat.targetId }" @click="handleChatClick(chat)">
                 <div class="chat-avatar">
-                    <img v-if="getUserAvatar(chat.targetId)" :src="getUserAvatar(chat.targetId)" alt="">
+                    <img v-if="getUserAvatar(chat.targetId) && !avatarLoadFailed[chat.targetId]" 
+                         :src="getUserAvatar(chat.targetId) || undefined" 
+                         alt=""
+                         @error="handleAvatarError(chat.targetId)">
                     <Avatar v-else :name="chat.targetInfo.name" :size="40" />
                     <div v-if="chat.unreadCount > 0" class="unread-badge">
                         {{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}
@@ -84,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import type { ChatListItem } from '@/types/chatList'
 import type { MessageInfo } from '@/types/chatList'
 import { formatTime } from '@/utils/date'
@@ -97,6 +104,14 @@ import { useUserStore } from '@/stores/module/useUserStore'
 const chatListStore = useChatListStore()
 const messageStore = useMessageStore()
 const userStore = useUserStore()
+
+// 跟踪头像加载失败的状态
+const avatarLoadFailed = ref<Record<string, boolean>>({})
+
+// 处理头像加载错误
+const handleAvatarError = (targetId: string) => {
+    avatarLoadFailed.value[targetId] = true
+}
 
 // 处理新消息更新聊天列表
 const handleNewMessage = (content: any) => {

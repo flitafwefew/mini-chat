@@ -166,7 +166,7 @@ const handleLogin = async () => {
         
         if (isMobile) {
             // 移动端直接使用fetch API
-            const response = await fetch('http://10.34.39.65:3002/api/v1/user/login', {
+            const response = await fetch('http://10.33.100.78:3002/api/v1/user/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
