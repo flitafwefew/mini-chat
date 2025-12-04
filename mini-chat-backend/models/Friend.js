@@ -22,24 +22,6 @@ const Friend = sequelize.define('Friend', {
     allowNull: true,
     comment: '备注'
   },
-  group_id: {
-    type: DataTypes.STRING(64),
-    allowNull: true,
-    defaultValue: '0',
-    comment: '分组id'
-  },
-  is_back: {
-    type: DataTypes.BOOLEAN,
-    allowNull: true,
-    defaultValue: false,
-    comment: '是否拉黑'
-  },
-  is_concern: {
-    type: DataTypes.BOOLEAN,
-    allowNull: true,
-    defaultValue: false,
-    comment: '是否特别关心'
-  },
   status: {
     type: DataTypes.STRING(500),
     allowNull: true,

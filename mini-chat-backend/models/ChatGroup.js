@@ -12,11 +12,6 @@ const ChatGroup = sequelize.define('ChatGroup', {
     allowNull: false,
     comment: '创建用户id'
   },
-  owner_user_id: {
-    type: DataTypes.STRING(64),
-    allowNull: false,
-    comment: '群主id'
-  },
   portrait: {
     type: DataTypes.TEXT,
     allowNull: true,

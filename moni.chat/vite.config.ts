@@ -23,16 +23,16 @@ export default defineConfig({
     port: 5175,
     proxy:{
       '/api': {
-        target: 'http://192.168.185.203:3002',
+        target: 'http://127.0.0.1:3002',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'http://192.168.185.203:3002',
+        target: 'http://localhost:3002',
         ws: true,
         changeOrigin: true,
       },
       '/avatars': {
-        target: 'http://192.168.185.203:3002',
+        target: 'http://localhost:3002',
         changeOrigin: true,
       },
     }

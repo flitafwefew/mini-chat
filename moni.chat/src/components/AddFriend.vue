@@ -354,7 +354,6 @@ onMounted(() => {
 .add-friend {
     padding: 20px;
     height: 100%;
-    overflow-y: auto;
     background: #EDF5FE;
 
     .search-section {
@@ -368,13 +367,16 @@ onMounted(() => {
         }
 
         .search-input-wrapper {
-            display: flex;
+            display:flex;
             gap: 10px;
             margin-bottom: 20px;
+            margin-left:-20px;
+            width: 20px;
 
             .search-input {
+                height: 40px;
+                width: 150px;
                 flex: 1;
-                padding: 10px 15px;
                 border: 2px solid #ddd;
                 border-radius: 8px;
                 font-size: 14px;
@@ -387,15 +389,17 @@ onMounted(() => {
             }
 
             .search-btn {
-                padding: 10px 20px;
+                white-space: nowrap;
+                height: 40px;
+                padding: 10px 10px;
                 background: #1296DB;
                 color: white;
                 border: none;
                 border-radius: 8px;
                 cursor: pointer;
-                font-size: 14px;
+                font-size: 10px;
                 transition: background 0.3s;
-
+                margin-left: -10px;
                 &:hover {
                     background: #0d7bb8;
                 }

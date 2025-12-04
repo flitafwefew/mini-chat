@@ -137,8 +137,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .group-list {
-    overflow-y: auto;
-    display: flex;
+    display:flex;
     flex-direction: column;
     gap: 10px;
 

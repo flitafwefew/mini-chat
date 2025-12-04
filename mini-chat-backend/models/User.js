@@ -32,20 +32,10 @@ const User = sequelize.define('User', {
     allowNull: true,
     comment: '性别'
   },
-  birthday: {
-    type: DataTypes.DATE(3),
-    allowNull: true,
-    comment: '生日'
-  },
   signature: {
     type: DataTypes.TEXT,
     allowNull: true,
     comment: '签名'
-  },
-  phone: {
-    type: DataTypes.STRING(64),
-    allowNull: true,
-    comment: '手机号'
   },
   email: {
     type: DataTypes.STRING(200),
@@ -56,11 +46,6 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE(3),
     allowNull: true,
     comment: '最后操作时间'
-  },
-  role: {
-    type: DataTypes.STRING(64),
-    allowNull: true,
-    comment: '用户角色'
   },
   status: {
     type: DataTypes.STRING(500),

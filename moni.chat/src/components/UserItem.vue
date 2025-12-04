@@ -57,7 +57,6 @@ const handleAvatarError = () => {
 const handleLogout = () => {
     userStore.logout()
 }
-
 const handleProfileUpdate = (user: UserInfo) => {
     // 个人资料更新成功后的处理
     console.log('个人资料更新成功:', user)
