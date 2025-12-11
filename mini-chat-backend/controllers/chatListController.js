@@ -793,18 +793,19 @@ const markAsRead = async (req, res) => {
         update_time: new Date()
       });
 
-      res.json({
+      return res.json({
         code: 0,
         msg: '标记已读成功',
         data: null
       });
-    } else {
-      res.status(404).json({
-        code: 404,
-        msg: '聊天记录不存在',
-        data: null
-      });
     }
+
+    // 没有找到聊天记录时也视为成功（幂等）
+    return res.json({
+      code: 0,
+      msg: '暂无聊天记录，已视为已读',
+      data: null
+    });
   } catch (error) {
     console.error('标记已读错误:', error);
     res.status(500).json({
