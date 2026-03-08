@@ -45,11 +45,8 @@
                             <img :src="message.message as string" alt="emoji" class="emoji-img" />
                         </div>
                         <div class="message-text" v-else-if="message.type === 'call'">
-                            <div v-if="message.message !== '0'&&typeof(message.message)==='string'" class="call-content">
-                                <span>[通话时长：{{formattedTime(message.message)}}]</span>
-                            </div>
-                            <div v-else class="call-content">
-                                <span>[未接通]</span>
+                            <div class="call-content">
+                                <span>{{ renderCallText(message.message) }}</span>
                             </div>
                         </div>
                     </div>
@@ -196,6 +193,27 @@ const fetchMessages = async () => {
 }
 const formattedTime = (time: string) => {
     return formatTimingTime(Number(time))
+}
+
+// 统一渲染通话结果文案：
+// - 如果是旧数据：'0' => [未接通]，>0 的纯数字 => [通话时长：xx:xx:xx]
+// - 如果是新数据：直接存了 '[未接通]' 或 '[通话已结束]' 这样的字符串，就原样展示
+const renderCallText = (raw: string | any) => {
+    if (typeof raw === 'string') {
+        if (raw === '0') return '[未接通]'
+        // 已经是带中文的通话结果文案，直接显示
+        if (raw.startsWith('[') && raw.endsWith(']')) return raw
+        const num = Number(raw)
+        if (!Number.isNaN(num) && num > 0) {
+            return `[通话时长：${formatTimingTime(num)}]`
+        }
+        return '[未接通]'
+    }
+    const num = Number(raw)
+    if (!Number.isNaN(num) && num > 0) {
+        return `[通话时长：${formatTimingTime(num)}]`
+    }
+    return '[未接通]'
 }
 // 检查字符串是否为JSON格式
 const isJsonString = (str: string): boolean => {

@@ -100,7 +100,6 @@ export default {
   padding: 40px 20px;
   color: #666;
 }
-
 .user-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

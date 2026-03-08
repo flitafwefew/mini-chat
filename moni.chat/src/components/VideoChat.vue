@@ -172,9 +172,12 @@ const remote = ref<HTMLVideoElement | null>(null);
 const isConnected = ref(false);//是否已接通
 const isMute = ref(false);//是否已关闭麦克风
 const pc = ref<RTCPeerConnection | null>(null)
+const candidateQueue = ref<any[]>([]) // 新增：候选人队列
 const timerId = ref();
 const time = ref(0);
 const webcamStream = ref()
+// 主叫方用来区分“未接通”和“已接通再挂断”
+const hasAccepted = ref(false);
 
 watch(() => props.isVideoChat, () => {
     if (props.isVideoChat) {
@@ -202,35 +205,27 @@ watch(isMute, () => {
 watch(() => props.onlyAudio, () => {
     if (webcamStream.value) {
         webcamStream.value.getVideoTracks().forEach((track: any) => {
-            track.enabled = props.onlyAudio;
+            track.enabled = !props.onlyAudio;
         })
     }
 })
-
 const handlerVideoMsg = (msg: any) => {
-    switch (msg.type) {
-        case 'hangup': {
-            ElMessage.success('对方已挂断~');
-            handleDestroyTime();
-            setTimeout(async function () {
-                emit('update:videoStatus');
-                if (props.isCaller) {
-                    const params: SendMessageParams = {
-                        msgContent: String(time.value),
-                        targetId: props.targetInfo.userId,
-                        type: 'call',
-                        source: useUserStore().user?.type as string,
-                    }
-                    try {
-                        await useMessageStore().sendMessage(params);
-                    } catch (error) {
-                        console.log(error)
-                    }
-                }
-            }, 1000);
-            break;
-        }
+    console.log('📨 VideoChat 收到 video 信令:', msg);
+        switch (msg.type) {
+            case 'hangup': {
+                ElMessage.success('对方已挂断~');
+                handleDestroyTime();
+                setTimeout(async function () {
+                    emit('update:videoStatus');
+                    isConnected.value = false;
+                }, 1000);
+                break;
+            }
         case 'accept': {
+            // 对方已接听，主叫方记录一下
+            hasAccepted.value = true;
+            isConnected.value = true;
+            startCallTimer();
             onOffer();
             break;
         }
@@ -254,33 +249,28 @@ const handlerVideoMsg = (msg: any) => {
     }
 }
 
-const initRTCPeerConnection = () => {//初始化RTCPeerConnection
+const initRTCPeerConnection = () => {
+    console.log('准备创建 RTCPeerConnection (局域网简化 ICE 配置)');
+    // 局域网/同一台电脑测试：不配置任何 STUN/TURN，只使用本机和内网地址
+    // 这样可以最大化排除外网/TURN 失败对测试的影响
     const iceServer = {
-        iceServers: [
-            {
-                urls: 'stun:stun.l.google.com:19302',
-            },
-            {
-                urls: 'turn:numb.viagenie.ca',
-                username: 'webrtc@live.com',
-                credential: 'muazkh',
-            },
-        ],
+        iceServers: [],
     }
     pc.value = new RTCPeerConnection(iceServer)
     if (!pc.value) {
         console.error('Failed to create RTCPeerConnection');
         return;
     }
-    console.log(pc);
-    pc.value.onicecandidate = handleICECandidateEvent;//监听ICE候选事件
-    pc.value.oniceconnectionstatechange = handleICEConnectionStateChangeEvent;//处理ICE连接状态变化事件
-    pc.value.ontrack = handleTranckEvent;//处理视频
+    console.log('✅ RTCPeerConnection 创建成功');
+    pc.value.onicecandidate = handleICECandidateEvent;
+    pc.value.oniceconnectionstatechange = handleICEConnectionStateChangeEvent;
+    pc.value.ontrack = handleTranckEvent;
 }
 const handleICECandidateEvent = (event: RTCPeerConnectionIceEvent) => {//处理 ICE 候选事件
     console.log('ICE candidate event triggered:', event);
     if (event.candidate) {
-        candidate({ userId: props.targetInfo.userId, candidate: event.candidate })
+        // 修改：后端预期 callId 和 candidate
+        candidate({ callId: props.targetInfo.callId, candidate: event.candidate })
     }
 }
 const handleICEConnectionStateChangeEvent = () => {
@@ -291,10 +281,7 @@ const handleICEConnectionStateChangeEvent = () => {
         case 'connected':
         case 'completed':
             ElMessage.success('通话连接成功');
-            handleDestroyTime(); // 清除之前的计时器
-            timerId.value = setInterval(() => {
-                time.value++
-            }, 1000);
+            startCallTimer();
             break;
         case 'disconnected':
             ElMessage.warning('网络连接不稳定，正在尝试重连...');
@@ -311,34 +298,74 @@ const handleICEConnectionStateChangeEvent = () => {
             console.log('ICE连接状态:', connectionState);
     }
 }
+
+// 启动通话计时（仅在未启动时生效）
+const startCallTimer = () => {
+    if (timerId.value) return;
+    timerId.value = setInterval(() => {
+        time.value++;
+    }, 1000);
+}
 // 处理接听
 const onOffer = async () => {
-    await nextTick(async () => {
-        initRTCPeerConnection();
-        await videoCall()
-        if (pc.value) {
-            const offerdesc = await pc.value.createOffer()
-            await pc.value.setLocalDescription(offerdesc)
-            await offer({ userId: props.targetInfo.userId, desc: pc.value.localDescription })
-            console.log('发送offer', offerdesc)
+    console.log('💬 onOffer 被调用');
+    try {
+        await nextTick();
+        // 确保 pc 一定已创建
+        if (!pc.value) {
+            console.log('onOffer: pc 为空，开始初始化 RTCPeerConnection');
+            initRTCPeerConnection();
+        } else {
+            console.log('onOffer: pc 已存在，直接复用');
         }
-
-    })
+        await videoCall();
+        console.log('onOffer: 调用 videoCall 完成，当前 pc:', pc.value);
+        if (pc.value) {
+            console.log('onOffer: 开始 createOffer');
+            const offerdesc = await pc.value.createOffer();
+            console.log('onOffer: createOffer 成功');
+            await pc.value.setLocalDescription(offerdesc);
+            console.log('onOffer: setLocalDescription 成功');
+            // 修改：后端预期 targetId、offer 和 callId
+            await offer({
+                targetId: props.targetInfo.userId,
+                offer: pc.value.localDescription,
+                callId: props.targetInfo.callId
+            });
+            console.log('发送offer', offerdesc);
+        } else {
+            console.error('onOffer: pc.value 为空，无法创建 offer');
+        }
+    } catch (err) {
+        console.error('onOffer 过程中出错:', err);
+    }
 }
 const onAccept = async () => {
+    console.log('💬 onAccept 被调用');
+    hasAccepted.value = true; // 本端作为被叫点了接听，视为已接通
     isConnected.value = true;
-    await nextTick(async () => {
-        initRTCPeerConnection()
-        await videoCall()
-    })
-    accept({ userId: props.targetInfo.userId }).then(() => {
-        console.log('接受视频邀请成功')
-    })
+    startCallTimer();
+    await nextTick();
+    initRTCPeerConnection();
+    await videoCall();
+    accept({ callId: props.targetInfo.callId }).then(() => {
+        console.log('接受视频邀请成功');
+    });
 }
 const handleTranckEvent = (event: RTCTrackEvent) => {
-    console.log('接受视频流')
-    if (remote.value)
-        remote.value.srcObject = event.streams[0];
+    console.log('收到远程轨道:', event.track.kind, event.streams);
+    if (remote.value) {
+        if (event.streams && event.streams[0]) {
+            // 如果已经是该流，不需要重复设置，但要确保播放
+            if (remote.value.srcObject !== event.streams[0]) {
+                remote.value.srcObject = event.streams[0];
+            }
+            // 某些浏览器需要显式调用 play()
+            remote.value.play().catch(err => {
+                console.warn('远程视频播放被拦截或失败:', err);
+            });
+        }
+    }
 }
 const videoCall = async () => {
     let retries = 0;
@@ -415,36 +442,66 @@ const videoCall = async () => {
     }
 }
 const handleNewICECandidateMsg = async (data: any) => {
-    const candidate = new RTCIceCandidate(data.candidate)
+    if (!data.candidate) return;
+    const candidateObj = new RTCIceCandidate(data.candidate)
     try {
-        if (pc.value) {
-            await pc.value.addIceCandidate(candidate)
+        if (pc.value && pc.value.remoteDescription) {
+            await pc.value.addIceCandidate(candidateObj)
+            console.log('成功添加 ICE 候选');
+        } else {
+            console.log('远程描述未就绪，将 ICE 候选加入队列');
+            candidateQueue.value.push(candidateObj);
         }
     } catch (error) {
         console.log('处理新的 ICE 候选消息出错:', error);
     }
 }
+const processCandidateQueue = async () => {
+    if (!pc.value || !pc.value.remoteDescription) return;
+    while (candidateQueue.value.length > 0) {
+        const cand = candidateQueue.value.shift();
+        try {
+            await pc.value.addIceCandidate(cand);
+            console.log('成功处理队列中的 ICE 候选');
+        } catch (error) {
+            console.error('处理队列中的 ICE 候选出错:', error);
+        }
+    }
+}
 const handleVideoOfferMsg = async (data: any) => {
     if (!pc.value) {
         console.error('RTCPeerConnection is not initialized.');
-        ElMessage.error('RTCPeerConnection 未初始化，请稍后重试。'); // 增加友好提示
+        ElMessage.error('RTCPeerConnection 未初始化，请稍后重试。');
         return;
     }
-    const desc = new RTCSessionDescription(data.desc);
+    const desc = new RTCSessionDescription(data.offer || data.desc);
     try {
+        console.log('handleVideoOfferMsg: 开始 setRemoteDescription');
         await pc.value.setRemoteDescription(desc);
+        console.log('handleVideoOfferMsg: 设置远程 Offer 成功');
+        await processCandidateQueue(); // 远程描述设置后处理队列
+        console.log('handleVideoOfferMsg: 开始 createAnswer');
         const answerDesc = await pc.value.createAnswer();
+        console.log('handleVideoOfferMsg: createAnswer 成功');
         await pc.value.setLocalDescription(answerDesc);
-        await answer({ userId: props.targetInfo.userId, desc: pc.value.localDescription });
+        console.log('handleVideoOfferMsg: setLocalDescription 成功');
+        // 修改：后端预期 callId 和 answer
+        await answer({ callId: data.callId || props.targetInfo.callId, answer: pc.value.localDescription });
     } catch (error) {
         console.error('Error handling video offer:', error);
-        ElMessage.error('处理视频邀请时出错，请稍后重试。'); // 增加友好提示
+        ElMessage.error('处理视频邀请时出错，请稍后重试。');
     }
 }
 const handleVideoAnswerMsg = async (data: any) => {
-    const desc = new RTCSessionDescription(data.desc)
+    const desc = new RTCSessionDescription(data.answer || data.desc)
     if (pc.value) {
-        await pc.value.setRemoteDescription(desc).catch(reportError)
+        try {
+            await pc.value.setRemoteDescription(desc);
+            console.log('设置远程 Answer 成功');
+            await processCandidateQueue(); // 远程描述设置后处理队列
+        } catch (error) {
+            console.error('设置远程 Answer 失败:', error);
+        }
     }
 }
 // 处理挂断
@@ -468,30 +525,55 @@ const handleHangup = async () => {
     
     // 后续处理逻辑
     console.log("userId" + props.targetInfo.userId)
+    // 修改：后端预期 callId
     hangup({
-        userId: props.targetInfo.userId
+        callId: props.targetInfo.callId
     })
     setTimeout(async function () {
         emit('update:videoStatus');
         isConnected.value = false;
     }, 1000);
-    if (props.isCaller) {
-        const params: SendMessageParams = {
-            msgContent: String(time.value),
-            targetId: props.targetInfo.userId,
-            type: 'call',
-            source: useUserStore().user?.type as string,
+    // 本端主动挂断时，也发送一条通话结果消息
+    // 规则（尽量贴近微信）：
+    // - 主叫 & 未接通：显示“已取消”
+    // - 被叫 & 未接通：显示“对方已拒绝”
+    // - 任意一方接通过：显示“通话时长 00:00:xx”
+    let text = '';
+    if (!hasAccepted.value) {
+        if (props.isCaller) {
+            text = '[已取消]';
+        } else {
+            text = '[对方已拒绝]';
         }
-        try {
-            await useMessageStore().sendMessage(params);
-        } catch (error) {
-            console.log(error)
-        }
+    } else {
+        const duration = time.value > 0 ? time.value : 1;
+        text = `[通话时长：${formatTimingTime(duration)}]`;
+    }
+    console.log('📞 本端挂断发送通话结果消息', {
+        isCaller: props.isCaller,
+        hasAccepted: hasAccepted.value,
+        time: time.value,
+        text,
+        targetId: props.targetInfo.userId,
+    });
+    const params: SendMessageParams = {
+        msgContent: text,
+        targetId: props.targetInfo.userId,
+        type: 'call',
+        source: useUserStore().user?.type as string,
+    }
+    try {
+        await useMessageStore().sendMessage(params);
+    } catch (error) {
+        console.log(error)
     }
 
 }
 const handleDestroyTime = () => {
-    if (timerId.value) clearInterval(timerId.value)
+    if (timerId.value) {
+        clearInterval(timerId.value);
+        timerId.value = undefined;
+    }
 }
 // 处理关闭麦克风
 const handleMute = () => {

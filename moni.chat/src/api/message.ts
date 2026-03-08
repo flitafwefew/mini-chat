@@ -19,7 +19,8 @@ const isMobileDevice = () => {
 
 // 获取服务URL
 const getServiceUrl = () => {
-    return isMobileDevice() ? 'http://10.33.100.78:3002' : 'http://10.33.100.78:3002';
+    const hostname = window.location.hostname || 'localhost';
+    return `http://${hostname}:3002`;
 };
 
 // 移动端直接fetch请求
@@ -51,12 +52,12 @@ const mobileFetch = async (url: string, options: RequestInit = {}) => {
 // 发送消息
 export const send = async (param: SendMessageParams) => {
     if (isMobileDevice()) {
-        return mobileFetch('/v1/message/send', {
+        return mobileFetch('/api/v1/message/send', {
             method: 'POST',
             body: JSON.stringify(param)
         });
     }
-    return Http.post<SendMessageResponse>('/v1/message/send', param);
+    return Http.post<SendMessageResponse>('/api/v1/message/send', param);
 };
 
 // 获取聊天记录
@@ -66,9 +67,9 @@ export const record = async (param: RecordParams) => {
         Object.entries(param).forEach(([key, value]) => {
             queryParams.append(key, value.toString());
         });
-        return mobileFetch(`/v1/message/list?${queryParams.toString()}`);
+        return mobileFetch(`/api/v1/message/list?${queryParams.toString()}`);
     }
-    return Http.get<MessageResponse>('/v1/message/list', param);
+    return Http.get<MessageResponse>('/api/v1/message/list', param);
 };
 
 // 获取聊天列表
@@ -92,14 +93,14 @@ export const getChatList = () => Http.get<{
       is_online: boolean
     }
   }>
-}>('/v1/message/chat-list')
+}>('/api/v1/message/chat-list')
 
 // 标记消息为已读
 export const markAsRead = (data: { from_id: string }) => Http.post<{
   code: number
   msg: string
   data: null
-}>('/v1/message/mark-read', data)
+}>('/api/v1/message/mark-read', data)
 
 // 撤回消息
-export const recall = (param: any) => Http.post('/v1/message/recall', param);
+export const recall = (param: any) => Http.post('/api/v1/message/recall', param);

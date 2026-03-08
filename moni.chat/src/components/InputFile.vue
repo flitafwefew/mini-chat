@@ -185,12 +185,13 @@ const sendVideoChat = async () => {
         "targetId": messageStore.targetId,
     }
     onlyAudio.value = false;
-    await vedioInvite(param);
+    const res: any = await vedioInvite(param);
     isCaller.value = true;
     videoStatus.value = true;
     targetInfo.value = {
         "userId": messageStore.targetId,
-        "targetName": messageStore.chatName
+        "targetName": messageStore.chatName,
+        "callId": res.data.callId
     }
 }
 const sendPhoneChat = async () => {
@@ -199,12 +200,13 @@ const sendPhoneChat = async () => {
         "targetId": messageStore.targetId,
     }
     onlyAudio.value = true;
-    await vedioInvite(param);
+    const res: any = await vedioInvite(param);
     isCaller.value = true;
     videoStatus.value = true;
     targetInfo.value = {
         "userId": messageStore.targetId,
-        "targetName": messageStore.chatName
+        "targetName": messageStore.chatName,
+        "callId": res.data.callId
     }
 }
 const handleUpdateVideoStatus = () => {
@@ -220,7 +222,7 @@ const handleFile = () => {
 
 const handlerVideoMsg = async (msg:any) => {
     console.log(msg)
-    if (msg.type === 'invite') {
+    if (msg.type === 'invite' || msg.type === 'offer' || msg.type === 'accept') {
         const userMap = await useUserStore().userMap;
         // 通过 msg.userId 从 userMap 中获取对应的用户信息
         const userInfo = userMap[msg.fromId];
@@ -230,9 +232,12 @@ const handlerVideoMsg = async (msg:any) => {
         targetInfo.value = {
             "userId": msg.fromId,
             "targetName": targetName,
+            "callId": msg.callId
         }
-        videoStatus.value = true;
-        isCalled.value = true;
+        if (msg.type === 'invite') {
+            videoStatus.value = true;
+            isCalled.value = true;
+        }
     }
 }
 

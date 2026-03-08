@@ -117,7 +117,10 @@ function response(event: MessageEvent) {
       }
       case 'video': {
         if (wsContent.content) {
+          console.log('🎥 [WebSocket] 收到 video 信令:', wsContent.content)
           EventBus.emit('on-receive-video', wsContent.content)
+        } else {
+          console.warn('🎥 [WebSocket] 收到 video 消息但 content 为空:', wsContent)
         }
         break
       }
@@ -163,9 +166,8 @@ function connect(tokenStr: string) {
   token = tokenStr
   try {
     // 根据环境选择WebSocket地址
-    const wsIp = import.meta.env.DEV 
-      ? 'ws://localhost:3002/ws'     // 开发环境直接连接后端
-      : 'ws://localhost:3002/ws'     // 生产环境直接连接后端
+    const hostname = window.location.hostname || 'localhost';
+    const wsIp = `ws://${hostname}:3002/ws`;
     ws = new WebSocket(wsIp + '?token=' + token)
     ws.onopen = () => {
       console.log('✅ WebSocket连接成功')

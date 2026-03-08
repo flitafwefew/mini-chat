@@ -20,7 +20,10 @@ function isMobileDevice() {
 // 获取服务URL的函数
 function getServiceUrl() {
   const isMobile = isMobileDevice();
-  return import.meta.env.VITE_API_BASE_URL || (isMobile ? 'http://192.168.185.224:3002' : (import.meta.env.DEV ? '/api' : 'http://192.168.185.224:3002'));
+  const hostname = window.location.hostname || 'localhost';
+  const remoteUrl = `http://${hostname}:3002`;
+  // 桌面端开发环境返回空字符串，因为 API 调用已经包含了 /api 前缀，由 Vite 代理处理
+  return import.meta.env.VITE_API_BASE_URL || (isMobile ? remoteUrl : (import.meta.env.DEV ? '' : remoteUrl));
 }
 
 // 创建axios实例

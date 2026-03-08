@@ -34,11 +34,11 @@ function getServiceUrl() {
   const protocol = window.location.protocol || 'http:';
   const isMobile = isMobileDevice();
 
-  // 2. 本地开发：桌面端继续走 Vite 代理（/api），移动端直连 3002
+  // 2. 本地开发：桌面端使用相对路径（由于代码已带/api，这里设为空），移动端直连 3002
   if (import.meta.env.DEV) {
     return isMobile
       ? `${protocol}//${hostname}:3002`
-      : '/api';
+      : '';
   }
 
   // 3. 生产环境默认使用当前页面的 origin
@@ -163,7 +163,7 @@ export default class Http {
         console.warn(`⚠️ 网络请求失败 (尝试 ${attempt}/${Http.MAX_RETRIES}):`, error.message);
         
         // 移动端特殊错误处理
-        if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        if (error.code === 'ERR_NETWORK' || (error.message && error.message.includes('Network Error'))) {
           console.log('📱 检测到移动端网络错误，尝试特殊处理');
           // 移动端网络错误等待时间稍长
           await new Promise(resolve => setTimeout(resolve, Http.RETRY_DELAY * attempt * 1.5));

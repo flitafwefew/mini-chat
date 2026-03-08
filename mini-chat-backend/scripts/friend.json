@@ -1,0 +1,772 @@
+[
+  {
+    "id": "3f2fa656-9b4a-4316-a041-c15dfa70d671",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "ai_assistant_001",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-10-28T09:27:16.046Z",
+    "update_time": "2025-10-28T09:27:16.046Z",
+    "chat_background": null
+  },
+  {
+    "id": "99c9f474-1ac7-4944-837e-4ead8c385625",
+    "user_id": "ai_assistant_001",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-10-28T09:27:16.046Z",
+    "update_time": "2025-10-28T09:27:16.046Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_02eiz4nk7",
+    "user_id": "03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_1aoob2nt7",
+    "user_id": "96781771-05d1-46e6-80f3-5dd7b11516e0",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_4rvazobwn",
+    "user_id": "07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_60vf7bzr0",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_6p5xrucre",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_80iwwfks8",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "6de433b0-7c62-43e6-b002-664d9b5347ab",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_829je8e6u",
+    "user_id": "4592ca9f-0224-4966-96fd-b48e8c30d775",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_9alhy3t8g",
+    "user_id": "0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_aue12cmye",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_bsy2hzdf8",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "4592ca9f-0224-4966-96fd-b48e8c30d775",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_itvgg5rag",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_jb7e5jkzm",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "dafe79b0-a673-4e2b-a82a-11b4f661e51e",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_ji0gsyyhr",
+    "user_id": "d6b9db36-3d29-468b-b109-93412a97401e",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_nr241bnpd",
+    "user_id": "6de433b0-7c62-43e6-b002-664d9b5347ab",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_r3kf1ubi8",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "d6b9db36-3d29-468b-b109-93412a97401e",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_s8yqa6eam",
+    "user_id": "e2baa8be-9ce5-4d1c-9c9b-b87de77da6bd",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_wg99ctep2",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "96781771-05d1-46e6-80f3-5dd7b11516e0",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_yaci1249r",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_z70d4rluq",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "e2baa8be-9ce5-4d1c-9c9b-b87de77da6bd",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759051732678_zahob29zp",
+    "user_id": "dafe79b0-a673-4e2b-a82a-11b4f661e51e",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:28:52.000Z",
+    "update_time": "2025-09-28T09:28:52.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052488_cv9nzuj6e",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052488_ut3hwlgwk",
+    "user_id": "user-002",
+    "friend_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052504_ciu5xh6ex",
+    "user_id": "03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052504_mpvs5ccfi",
+    "user_id": "user-002",
+    "friend_id": "03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052519_euktis49q",
+    "user_id": "user-002",
+    "friend_id": "07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052519_l0drr74js",
+    "user_id": "07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052534_4uv6kwkh5",
+    "user_id": "user-002",
+    "friend_id": "0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052534_9jvf8m9ss",
+    "user_id": "0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052548_c63do9vqq",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052548_l09ugge38",
+    "user_id": "user-002",
+    "friend_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052562_7ldih2e6y",
+    "user_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052562_8suqr385x",
+    "user_id": "user-002",
+    "friend_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052575_lx31qqc8i",
+    "user_id": "user-002",
+    "friend_id": "4592ca9f-0224-4966-96fd-b48e8c30d775",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052575_xfeaafdjf",
+    "user_id": "4592ca9f-0224-4966-96fd-b48e8c30d775",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052591_fq3cj11cf",
+    "user_id": "4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052591_s47di9isi",
+    "user_id": "user-002",
+    "friend_id": "4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052606_vszibepn9",
+    "user_id": "user-002",
+    "friend_id": "6de433b0-7c62-43e6-b002-664d9b5347ab",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052606_wlyiowpvn",
+    "user_id": "6de433b0-7c62-43e6-b002-664d9b5347ab",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052624_2r2i8ajhi",
+    "user_id": "user-002",
+    "friend_id": "86246770-0c11-4abb-a678-744a43adac5f",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052624_xw3ana5fr",
+    "user_id": "86246770-0c11-4abb-a678-744a43adac5f",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052637_qo26tm0ia",
+    "user_id": "user-002",
+    "friend_id": "870cb4bd-91e1-45a9-9ac4-5a12c89935d7",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052637_qvskubad9",
+    "user_id": "870cb4bd-91e1-45a9-9ac4-5a12c89935d7",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052653_a7yu5sk6f",
+    "user_id": "96781771-05d1-46e6-80f3-5dd7b11516e0",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052653_iby7rojp4",
+    "user_id": "user-002",
+    "friend_id": "96781771-05d1-46e6-80f3-5dd7b11516e0",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052666_s1yian7r0",
+    "user_id": "user-002",
+    "friend_id": "d6b9db36-3d29-468b-b109-93412a97401e",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052666_ydr9ymznk",
+    "user_id": "d6b9db36-3d29-468b-b109-93412a97401e",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052682_7kspsaxd2",
+    "user_id": "dafe79b0-a673-4e2b-a82a-11b4f661e51e",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052682_whzirnysx",
+    "user_id": "user-002",
+    "friend_id": "dafe79b0-a673-4e2b-a82a-11b4f661e51e",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052696_e6g98slk8",
+    "user_id": "e2baa8be-9ce5-4d1c-9c9b-b87de77da6bd",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052696_tkliybvon",
+    "user_id": "user-002",
+    "friend_id": "e2baa8be-9ce5-4d1c-9c9b-b87de77da6bd",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052709_3i9cwm2qd",
+    "user_id": "e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "friend_id": "user-002",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1759052052709_r7qmt1avb",
+    "user_id": "user-002",
+    "friend_id": "e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-09-28T09:34:12.000Z",
+    "update_time": "2025-09-28T09:34:12.000Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764322514595_3f42f462-691b-446f-b1de-be3da6e788be_03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "user_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "friend_id": "03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:35:14.595Z",
+    "update_time": "2025-11-28T09:35:14.595Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764322557498_3f42f462-691b-446f-b1de-be3da6e788be_07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "user_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "friend_id": "07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:35:57.498Z",
+    "update_time": "2025-11-28T09:35:57.498Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764322558700_3f42f462-691b-446f-b1de-be3da6e788be_0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "user_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "friend_id": "0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:35:58.700Z",
+    "update_time": "2025-11-28T09:35:58.700Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764322561455_3f42f462-691b-446f-b1de-be3da6e788be_3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "user_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "friend_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "remark": "",
+    "status": "accepted",
+    "create_time": "2025-11-28T09:36:01.455Z",
+    "update_time": "2025-11-28T09:36:20.431Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764322580438_3ebdc85c-7ddb-477a-b19c-abf52188fe50_3f42f462-691b-446f-b1de-be3da6e788be",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-11-28T09:36:20.438Z",
+    "update_time": "2025-11-28T09:36:20.438Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323047780_3ebdc85c-7ddb-477a-b19c-abf52188fe50_03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "03183caa-ee2e-4de7-a8d8-78ca23ac353e",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:07.780Z",
+    "update_time": "2025-11-28T09:44:07.780Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323050029_3ebdc85c-7ddb-477a-b19c-abf52188fe50_07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "07e0682a-e9cc-42de-9728-8b77bc7aed14",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:10.029Z",
+    "update_time": "2025-11-28T09:44:10.029Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323051608_3ebdc85c-7ddb-477a-b19c-abf52188fe50_4592ca9f-0224-4966-96fd-b48e8c30d775",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "4592ca9f-0224-4966-96fd-b48e8c30d775",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:11.608Z",
+    "update_time": "2025-11-28T09:44:11.608Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323052523_3ebdc85c-7ddb-477a-b19c-abf52188fe50_4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:12.523Z",
+    "update_time": "2025-11-28T09:44:12.523Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323053405_3ebdc85c-7ddb-477a-b19c-abf52188fe50_6de433b0-7c62-43e6-b002-664d9b5347ab",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "6de433b0-7c62-43e6-b002-664d9b5347ab",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:13.405Z",
+    "update_time": "2025-11-28T09:44:13.405Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323053890_3ebdc85c-7ddb-477a-b19c-abf52188fe50_86246770-0c11-4abb-a678-744a43adac5f",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "86246770-0c11-4abb-a678-744a43adac5f",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:13.890Z",
+    "update_time": "2025-11-28T09:44:13.890Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323054715_3ebdc85c-7ddb-477a-b19c-abf52188fe50_870cb4bd-91e1-45a9-9ac4-5a12c89935d7",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "870cb4bd-91e1-45a9-9ac4-5a12c89935d7",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:14.715Z",
+    "update_time": "2025-11-28T09:44:14.715Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323054976_3ebdc85c-7ddb-477a-b19c-abf52188fe50_96781771-05d1-46e6-80f3-5dd7b11516e0",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "96781771-05d1-46e6-80f3-5dd7b11516e0",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:14.976Z",
+    "update_time": "2025-11-28T09:44:14.976Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323055139_3ebdc85c-7ddb-477a-b19c-abf52188fe50_d6b9db36-3d29-468b-b109-93412a97401e",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "d6b9db36-3d29-468b-b109-93412a97401e",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:15.139Z",
+    "update_time": "2025-11-28T09:44:15.139Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323055767_3ebdc85c-7ddb-477a-b19c-abf52188fe50_dafe79b0-a673-4e2b-a82a-11b4f661e51e",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "dafe79b0-a673-4e2b-a82a-11b4f661e51e",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:15.767Z",
+    "update_time": "2025-11-28T09:44:15.767Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323056034_3ebdc85c-7ddb-477a-b19c-abf52188fe50_e2baa8be-9ce5-4d1c-9c9b-b87de77da6bd",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "e2baa8be-9ce5-4d1c-9c9b-b87de77da6bd",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:16.034Z",
+    "update_time": "2025-11-28T09:44:16.034Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323056330_3ebdc85c-7ddb-477a-b19c-abf52188fe50_e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "remark": "",
+    "status": "accepted",
+    "create_time": "2025-11-28T09:44:16.330Z",
+    "update_time": "2025-12-04T05:11:17.042Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764323057691_3ebdc85c-7ddb-477a-b19c-abf52188fe50_0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "user_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "friend_id": "0e71e4e2-ddf1-4285-b89a-ba81e6542d14",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-11-28T09:44:17.691Z",
+    "update_time": "2025-11-28T09:44:17.691Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764825038171_3f42f462-691b-446f-b1de-be3da6e788be_e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "user_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "friend_id": "e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "remark": "",
+    "status": "accepted",
+    "create_time": "2025-12-04T05:10:38.171Z",
+    "update_time": "2025-12-04T05:11:14.930Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764825074939_e6e01698-cd58-45ef-989f-a94e2aa918fb_3f42f462-691b-446f-b1de-be3da6e788be",
+    "user_id": "e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "friend_id": "3f42f462-691b-446f-b1de-be3da6e788be",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-12-04T05:11:14.939Z",
+    "update_time": "2025-12-04T05:11:14.939Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764825077052_e6e01698-cd58-45ef-989f-a94e2aa918fb_3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "user_id": "e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "friend_id": "3ebdc85c-7ddb-477a-b19c-abf52188fe50",
+    "remark": null,
+    "status": "accepted",
+    "create_time": "2025-12-04T05:11:17.052Z",
+    "update_time": "2025-12-04T05:11:17.052Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1764827246764_e6e01698-cd58-45ef-989f-a94e2aa918fb_4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "user_id": "e6e01698-cd58-45ef-989f-a94e2aa918fb",
+    "friend_id": "4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-12-04T05:47:26.764Z",
+    "update_time": "2025-12-04T05:47:26.764Z",
+    "chat_background": null
+  },
+  {
+    "id": "friend_1765605365042_01c87d08-4d05-4eb9-b0ca-92bc9ca235a9_4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "user_id": "01c87d08-4d05-4eb9-b0ca-92bc9ca235a9",
+    "friend_id": "4bd8393a-b77b-45f8-9e75-22e8b46aff46",
+    "remark": "",
+    "status": "pending",
+    "create_time": "2025-12-13T05:56:05.042Z",
+    "update_time": "2025-12-13T05:56:05.042Z",
+    "chat_background": null
+  }
+]

@@ -109,11 +109,12 @@ const handleLogin = async () => {
         
         if (isMobile) {
             // 移动端直接使用fetch API，和调试页面完全相同的逻辑
+            const hostname = window.location.hostname || 'localhost';
             console.log('📱 使用移动端直接连接方式');
-            console.log('📡 请求URL: http://10.33.100.78:3002/api/v1/user/login');
+            console.log(`📡 请求URL: http://${hostname}:3002/api/v1/user/login`);
             console.log('📡 请求数据:', { account: loginForm.value.userName, password: loginForm.value.password });
 
-            const response = await fetch('http://10.33.100.78:3002/api/v1/user/login', {
+            const response = await fetch(`http://${hostname}:3002/api/v1/user/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

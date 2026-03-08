@@ -16,7 +16,7 @@ const setUserConnections = (connections) => {
 const sendVideoOffer = async (req, res) => {
   try {
     const { userId } = req.user;
-    const { targetId, offer } = req.body;
+    const { targetId, offer, callId } = req.body;
 
     if (!targetId || !offer) {
       return res.status(400).json({
@@ -25,9 +25,9 @@ const sendVideoOffer = async (req, res) => {
       });
     }
 
-    // 存储视频通话信息
-    const callId = `call-${Date.now()}-${userId}`;
-    videoConnections.set(callId, {
+    // 存储视频通话信息，优先使用传入的 callId
+    const finalCallId = callId || `call-${Date.now()}-${userId}`;
+    videoConnections.set(finalCallId, {
       from: userId,
       to: targetId,
       offer: offer,
@@ -39,8 +39,26 @@ const sendVideoOffer = async (req, res) => {
     res.json({
       code: 200,
       message: '视频通话邀请发送成功',
-      data: { callId }
+      data: { callId: finalCallId }
     });
+
+    // 通过WebSocket发送offer通知给目标用户
+    if (userConnections) {
+      console.log('[videoCall] 准备通过WS发送 offer 给用户:', String(targetId));
+      const targetWs = userConnections.get(String(targetId));
+      if (targetWs && targetWs.readyState === 1) {
+        console.log('[videoCall] WS 发送 offer 成功, callId:', finalCallId);
+        targetWs.send(JSON.stringify({
+          type: 'video',
+          content: {
+            type: 'offer',
+            callId: finalCallId,
+            fromId: userId,
+            offer: offer
+          }
+        }));
+      }
+    }
   } catch (error) {
     console.error('发送视频通话offer失败:', error);
     res.status(500).json({
@@ -80,6 +98,24 @@ const sendVideoAnswer = async (req, res) => {
       code: 200,
       message: 'Answer发送成功'
     });
+
+    // 通过WebSocket发送answer通知给发起者
+    if (userConnections) {
+      console.log('[videoCall] 准备通过WS发送 answer 给发起者:', String(call.from));
+      const targetWs = userConnections.get(String(call.from));
+      if (targetWs && targetWs.readyState === 1) {
+        console.log('[videoCall] WS 发送 answer 成功, callId:', callId);
+        targetWs.send(JSON.stringify({
+          type: 'video',
+          content: {
+            type: 'answer',
+            callId: callId,
+            fromId: userId,
+            answer: answer
+          }
+        }));
+      }
+    }
   } catch (error) {
     console.error('发送视频通话answer失败:', error);
     res.status(500).json({
@@ -121,6 +157,25 @@ const sendVideoCandidate = async (req, res) => {
       code: 200,
       message: 'Candidate发送成功'
     });
+
+    // 通过WebSocket发送candidate通知给对方
+    if (userConnections) {
+      const targetId = (userId === call.from) ? call.to : call.from;
+      console.log('[videoCall] 准备通过WS发送 candidate 给用户:', String(targetId));
+      const targetWs = userConnections.get(String(targetId));
+      if (targetWs && targetWs.readyState === 1) {
+        console.log('[videoCall] WS 发送 candidate 成功, callId:', callId);
+        targetWs.send(JSON.stringify({
+          type: 'video',
+          content: {
+            type: 'candidate',
+            callId: callId,
+            fromId: userId,
+            candidate: candidate
+          }
+        }));
+      }
+    }
   } catch (error) {
     console.error('发送视频通话candidate失败:', error);
     res.status(500).json({
@@ -155,6 +210,24 @@ const hangupCall = async (req, res) => {
       code: 200,
       message: '挂断成功'
     });
+
+    // 通过WebSocket发送挂断通知给对方
+    if (userConnections && call) {
+      const targetId = (userId === call.from) ? call.to : call.from;
+      console.log('[videoCall] 准备通过WS发送 hangup 给用户:', String(targetId));
+      const targetWs = userConnections.get(String(targetId));
+      if (targetWs && targetWs.readyState === 1) {
+        console.log('[videoCall] WS 发送 hangup 成功, callId:', callId);
+        targetWs.send(JSON.stringify({
+          type: 'video',
+          content: {
+            type: 'hangup',
+            callId: callId,
+            fromId: userId
+          }
+        }));
+      }
+    }
   } catch (error) {
     console.error('挂断视频通话失败:', error);
     res.status(500).json({
@@ -208,7 +281,8 @@ const inviteVideoCall = async (req, res) => {
 
     // 通过WebSocket发送通话邀请通知给目标用户
     if (userConnections) {
-      const targetWs = userConnections.get(targetId);
+      console.log('[videoCall] 准备通过WS发送 invite 给用户:', String(targetId));
+      const targetWs = userConnections.get(String(targetId));
       if (targetWs && targetWs.readyState === 1) { // WebSocket.OPEN = 1
         const inviteMessage = {
           type: 'video',
@@ -278,6 +352,23 @@ const acceptVideoCall = async (req, res) => {
       code: 200,
       message: '接受成功'
     });
+
+    // 通过WebSocket发送接受通知给发起者
+    if (userConnections) {
+      console.log('[videoCall] 准备通过WS发送 accept 给发起者:', String(call.from));
+      const targetWs = userConnections.get(String(call.from));
+      if (targetWs && targetWs.readyState === 1) {
+        console.log('[videoCall] WS 发送 accept 成功, callId:', callId);
+        targetWs.send(JSON.stringify({
+          type: 'video',
+          content: {
+            type: 'accept',
+            callId: callId,
+            fromId: userId
+          }
+        }));
+      }
+    }
   } catch (error) {
     console.error('接受视频通话失败:', error);
     res.status(500).json({
